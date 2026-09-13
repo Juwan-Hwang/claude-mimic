@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "name": "claude-mimic",
+  "version": "1.0.0",
+  "description": "Make OpenCode speak Claude Code's Git dialect and attribution standards.",
+  "plugin": [
+    "./.opencode/plugins/claude-mimic.mjs"
+  ],
+  "skills": [
+    "./skills/claude-mimic"
+  ]
+}

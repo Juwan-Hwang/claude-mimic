@@ -1,0 +1,9 @@
+{
+  "name": "claude-mimic",
+  "version": "1.0.0",
+  "description": "Google Antigravity & Gemini CLI skill for Claude Code git dialect and attribution formatting.",
+  "instructions": "GEMINI.md",
+  "skills": [
+    "./skills/claude-mimic"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "claude-mimic",
+  "version": "1.0.0",
+  "description": "Make OpenAI Codex CLI speak Claude Code's Git dialect and attribution standards.",
+  "entrypoint": "skills/claude-mimic/SKILL.md",
+  "skills": [
+    "./skills/claude-mimic"
+  ]
+}

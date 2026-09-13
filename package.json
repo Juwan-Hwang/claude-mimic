@@ -1,0 +1,39 @@
+{
+  "name": "claude-mimic",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "The AI coding agent attribution compatibility layer. Make any coding agent speak Claude Code's Git dialect across 12+ client ecosystems.",
+  "main": "scripts/git-claude-commit.sh",
+  "bin": {
+    "git-claude-commit": "./scripts/git-claude-commit.sh",
+    "gh-claude-pr": "./scripts/gh-claude-pr.sh"
+  },
+  "scripts": {
+    "test": "node --test tests/validate.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Juwan-Hwang/claude-mimic.git"
+  },
+  "keywords": [
+    "agent-skill",
+    "claude-code",
+    "claude",
+    "git-commit",
+    "co-authored-by",
+    "pull-request",
+    "anthropic",
+    "skills",
+    "developer-tools",
+    "mythos",
+    "fable",
+    "opus",
+    "sonnet"
+  ],
+  "author": "Juwan Hwang",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Juwan-Hwang/claude-mimic/issues"
+  },
+  "homepage": "https://github.com/Juwan-Hwang/claude-mimic#readme"
+}

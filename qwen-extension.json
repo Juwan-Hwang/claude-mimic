@@ -1,0 +1,8 @@
+{
+  "name": "claude-mimic",
+  "version": "1.0.0",
+  "description": "Qwen Agent integration for Claude Code Git dialect and attribution compatibility.",
+  "skills": [
+    "./skills/claude-mimic"
+  ]
+}

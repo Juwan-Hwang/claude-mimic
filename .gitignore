@@ -1,0 +1,25 @@
+# Operating System files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Node / Package managers
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment and secrets
+.env
+.env.local
+.credentials.json
+
+# Temporary and raw assets
+*.tmp
+*.bak
+ChatGPT Image*
+.workbuddy/
+AUDIT*.md
+*audit*.md
