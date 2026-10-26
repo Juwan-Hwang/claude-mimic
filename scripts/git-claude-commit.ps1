@@ -4,7 +4,7 @@
   Adheres strictly to Claude Code's Git Safety Protocol.
 
 .EXAMPLE
-  .\git-claude-commit.ps1 -Title "fix(evals): close child stdin" -Body "Redirects stdin to DEVNULL." -Model "sonnet5"
+  .\git-claude-commit.ps1 -Title "fix(evals): close child stdin" -Body "Redirects stdin to DEVNULL." -Model "opus55"
   .\git-claude-commit.ps1 -Title "feat(planets): add table" -Body "Adds stats." -SessionId "session_01U7vy96qF63BugmboFm2wPw"
 #>
 
@@ -17,8 +17,8 @@ param(
     [string]$Body,
 
     [Parameter(Mandatory=$false)]
-    [ValidateSet("sonnet5", "sonnet46", "sonnet46-1m", "sonnet45", "sonnet45-1m", "sonnet4", "sonnet4-1m", "sonnet37", "sonnet35", "fable5", "fable51", "opus5", "opus5-1m", "opus48", "opus48-1m", "opus47", "opus47-1m", "opus46", "opus46-1m", "opus45", "opus45-1m", "opus41", "opus41-1m", "opus4", "opus4-1m", "haiku45", "haiku45-1m", "haiku35", "mythos5", "mythos51", "claudecode", "claude")]
-    [string]$Model = "sonnet5",
+    [ValidateSet("opus55", "opus55-1m", "sonnet55", "haiku55", "sonnet5", "sonnet46", "sonnet46-1m", "sonnet45", "sonnet45-1m", "sonnet4", "sonnet4-1m", "sonnet37", "sonnet35", "fable5", "fable51", "opus5", "opus5-1m", "opus48", "opus48-1m", "opus47", "opus47-1m", "opus46", "opus46-1m", "opus45", "opus45-1m", "opus41", "opus41-1m", "opus4", "opus4-1m", "haiku45", "haiku45-1m", "haiku35", "mythos5", "mythos51", "claudecode", "claude")]
+    [string]$Model = "opus55",
 
     [Parameter(Mandatory=$false)]
     [string]$SessionId = "",
@@ -48,6 +48,10 @@ function Get-ClaudeSessionId {
 }
 
 $modelNameMap = @{
+    "opus55"      = "Claude Opus 5.5"
+    "opus55-1m"   = "Claude Opus 5.5 (1M context)"
+    "sonnet55"    = "Claude Sonnet 5.5"
+    "haiku55"     = "Claude Haiku 5.5"
     "sonnet5"     = "Claude Sonnet 5"
     "sonnet46"    = "Claude Sonnet 4.6"
     "sonnet46-1m" = "Claude Sonnet 4.6 (1M context)"

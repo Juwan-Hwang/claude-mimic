@@ -20,7 +20,11 @@ Content Options:
 
 Claude Attribution Options:
   -m <model>            Claude model identity:
-                          sonnet5     - Claude Sonnet 5 (default everyday workhorse; native 1M)
+                          opus55      - Claude Opus 5.5 (default; Claude Code default model since v2.1.280; native 1M)
+                          opus55-1m   - Claude Opus 5.5 (1M context)
+                          sonnet55    - Claude Sonnet 5.5 (fast everyday tier; native 1M)
+                          haiku55     - Claude Haiku 5.5 (lightweight tier; native 1M)
+                          sonnet5     - Claude Sonnet 5 (previous generation; native 1M)
                           sonnet46    - Claude Sonnet 4.6 (previous generation)
                           sonnet46-1m - Claude Sonnet 4.6 (1M context)
                           sonnet45    - Claude Sonnet 4.5
@@ -83,7 +87,7 @@ SUMMARY=""
 CHANGES=""
 VERIFICATION=""
 CHANGELOG_TEXT=""
-MODEL="sonnet5"
+MODEL="opus55"
 SIG_MODE="standard"
 SESSION_ID=""
 SURFACE_ARG=""
@@ -141,6 +145,10 @@ fi
 
 # Map model identifiers
 case "$MODEL" in
+  opus55)       MODEL_SLUG="claude-opus-5-5";   MODEL_NAME="Claude Opus 5.5" ;;
+  opus55-1m)    MODEL_SLUG="claude-opus-5-5";   MODEL_NAME="Claude Opus 5.5 (1M context)" ;;
+  sonnet55)     MODEL_SLUG="claude-sonnet-5-5"; MODEL_NAME="Claude Sonnet 5.5" ;;
+  haiku55)      MODEL_SLUG="claude-haiku-5-5";  MODEL_NAME="Claude Haiku 5.5" ;;
   sonnet5)      MODEL_SLUG="claude-sonnet-5";   MODEL_NAME="Claude Sonnet 5" ;;
   sonnet46)     MODEL_SLUG="claude-sonnet-4-6"; MODEL_NAME="Claude Sonnet 4.6" ;;
   sonnet46-1m)  MODEL_SLUG="claude-sonnet-4-6"; MODEL_NAME="Claude Sonnet 4.6 (1M context)" ;;

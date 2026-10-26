@@ -13,7 +13,11 @@ Required:
 
 Options:
   -m <model>            Model tier:
-                          sonnet5     - Claude Sonnet 5 (default everyday workhorse; native 1M)
+                          opus55      - Claude Opus 5.5 (default; Claude Code default model since v2.1.280; native 1M)
+                          opus55-1m   - Claude Opus 5.5 (1M context)
+                          sonnet55    - Claude Sonnet 5.5 (fast everyday tier; native 1M)
+                          haiku55     - Claude Haiku 5.5 (lightweight tier; native 1M)
+                          sonnet5     - Claude Sonnet 5 (previous generation; native 1M)
                           sonnet46    - Claude Sonnet 4.6 (previous generation)
                           sonnet46-1m - Claude Sonnet 4.6 (1M context)
                           sonnet45    - Claude Sonnet 4.5
@@ -57,7 +61,7 @@ EOF
 
 TITLE=""
 BODY=""
-MODEL="sonnet5"
+MODEL="opus55"
 SESSION_ID=""
 AUTO_SESSION=false
 USE_LOWERCASE=false
@@ -98,6 +102,10 @@ if [[ -z "$TITLE" || -z "$BODY" ]]; then
 fi
 
 case "$MODEL" in
+  opus55)      MODEL_NAME="Claude Opus 5.5" ;;
+  opus55-1m)   MODEL_NAME="Claude Opus 5.5 (1M context)" ;;
+  sonnet55)    MODEL_NAME="Claude Sonnet 5.5" ;;
+  haiku55)     MODEL_NAME="Claude Haiku 5.5" ;;
   sonnet5)     MODEL_NAME="Claude Sonnet 5" ;;
   sonnet46)    MODEL_NAME="Claude Sonnet 4.6" ;;
   sonnet46-1m) MODEL_NAME="Claude Sonnet 4.6 (1M context)" ;;

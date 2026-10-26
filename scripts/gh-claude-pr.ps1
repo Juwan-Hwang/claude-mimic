@@ -28,7 +28,7 @@
   Changelog entry text (omitted by default; placed before signature if provided).
 
 .PARAMETER Model
-  Claude model identity. Supported: sonnet5, sonnet46, sonnet46-1m, sonnet45, sonnet45-1m, sonnet4, sonnet4-1m, sonnet37, sonnet35, fable5, fable51, opus5, opus5-1m, opus48, opus48-1m, opus47, opus47-1m, opus46, opus46-1m, opus45, opus45-1m, opus41, opus41-1m, opus4, opus4-1m, haiku45, haiku45-1m, haiku35, mythos5, mythos51, claudecode, claude.
+  Claude model identity. Supported: opus55 (default), sonnet55, haiku55, sonnet5, sonnet46, sonnet46-1m, sonnet45, sonnet45-1m, sonnet4, sonnet4-1m, sonnet37, sonnet35, fable5, fable51, opus5, opus5-1m, opus48, opus48-1m, opus47, opus47-1m, opus46, opus46-1m, opus45, opus45-1m, opus41, opus41-1m, opus4, opus4-1m, haiku45, haiku45-1m, haiku35, mythos5, mythos51, claudecode, claude.
 
 .PARAMETER SignatureMode
   Signature mode: standard, surface, remote, enhanced, oneshot, changelog, undercover.
@@ -61,7 +61,7 @@
   Output PR title and body to console without executing `gh pr create`.
 
 .EXAMPLE
-  .\gh-claude-pr.ps1 -Title "fix(stream): close child stdin" -Type default -Model sonnet5 -DryRun
+  .\gh-claude-pr.ps1 -Title "fix(stream): close child stdin" -Type default -Model opus55 -DryRun
   .\gh-claude-pr.ps1 -Title "fix(stream): close child stdin" -Surface cowork -DryRun
 #>
 
@@ -91,8 +91,8 @@ param(
     [string]$Changelog = "",
 
     [Parameter(Mandatory=$false)]
-    [ValidateSet("sonnet5", "sonnet46", "sonnet46-1m", "sonnet45", "sonnet45-1m", "sonnet4", "sonnet4-1m", "sonnet37", "sonnet35", "fable5", "fable51", "opus5", "opus5-1m", "opus48", "opus48-1m", "opus47", "opus47-1m", "opus46", "opus46-1m", "opus45", "opus45-1m", "opus41", "opus41-1m", "opus4", "opus4-1m", "haiku45", "haiku45-1m", "haiku35", "mythos5", "mythos51", "claudecode", "claude")]
-    [string]$Model = "sonnet5",
+    [ValidateSet("opus55", "opus55-1m", "sonnet55", "haiku55", "sonnet5", "sonnet46", "sonnet46-1m", "sonnet45", "sonnet45-1m", "sonnet4", "sonnet4-1m", "sonnet37", "sonnet35", "fable5", "fable51", "opus5", "opus5-1m", "opus48", "opus48-1m", "opus47", "opus47-1m", "opus46", "opus46-1m", "opus45", "opus45-1m", "opus41", "opus41-1m", "opus4", "opus4-1m", "haiku45", "haiku45-1m", "haiku35", "mythos5", "mythos51", "claudecode", "claude")]
+    [string]$Model = "opus55",
 
     [Parameter(Mandatory=$false)]
     [ValidateSet("standard", "surface", "remote", "enhanced", "oneshot", "changelog", "undercover", "mode8", "p8", "remote_attached")]
@@ -145,6 +145,10 @@ $productUrl = if ($LegacyUrl) { "https://claude.ai/code" } else { "https://claud
 
 # Model Slugs
 $modelSlugMap = @{
+    "opus55"      = "claude-opus-5-5"
+    "opus55-1m"   = "claude-opus-5-5"
+    "sonnet55"    = "claude-sonnet-5-5"
+    "haiku55"     = "claude-haiku-5-5"
     "sonnet5"     = "claude-sonnet-5"
     "sonnet46"    = "claude-sonnet-4-6"
     "sonnet46-1m" = "claude-sonnet-4-6"
