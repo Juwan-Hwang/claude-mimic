@@ -4,8 +4,9 @@
 // `npm run sync -- --check` exits non-zero if a mirror is out of date.
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MIRRORS = ['skills/claude-mimic', '.cursor/skills/claude-mimic'];
 const FILES = ['SKILL.md', 'references/model-matrix.md', 'references/pr-signatures.md', 'references/templates.md'];
 const check = process.argv.includes('--check');
