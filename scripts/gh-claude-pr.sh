@@ -143,7 +143,10 @@ if $USE_LEGACY_URL; then
   PRODUCT_URL="https://claude.ai/code"
 fi
 
-# Map model identifiers
+# Map model identifiers.
+# MODEL_SLUG mirrors the external-repo name Claude Code v2.1.310 prints in the P2
+# "-shotted by" line: the first entry of its model table whose key the model ID
+# contains, else "claude" (legacy IDs like claude-3-7-sonnet-* match no entry).
 case "$MODEL" in
   opus55)       MODEL_SLUG="claude-opus-5-5";   MODEL_NAME="Claude Opus 5.5" ;;
   opus55-1m)    MODEL_SLUG="claude-opus-5-5";   MODEL_NAME="Claude Opus 5.5 (1M context)" ;;
@@ -154,10 +157,10 @@ case "$MODEL" in
   sonnet46-1m)  MODEL_SLUG="claude-sonnet-4-6"; MODEL_NAME="Claude Sonnet 4.6 (1M context)" ;;
   sonnet45)     MODEL_SLUG="claude-sonnet-4-5"; MODEL_NAME="Claude Sonnet 4.5" ;;
   sonnet45-1m)  MODEL_SLUG="claude-sonnet-4-5"; MODEL_NAME="Claude Sonnet 4.5 (1M context)" ;;
-  sonnet4)      MODEL_SLUG="claude-sonnet-4-0"; MODEL_NAME="Claude Sonnet 4" ;;
-  sonnet4-1m)   MODEL_SLUG="claude-sonnet-4-0"; MODEL_NAME="Claude Sonnet 4 (1M context)" ;;
-  sonnet37)     MODEL_SLUG="claude-3-7-sonnet"; MODEL_NAME="Claude Sonnet 3.7" ;;
-  sonnet35)     MODEL_SLUG="claude-3-5-sonnet"; MODEL_NAME="Claude Sonnet 3.5" ;;
+  sonnet4)      MODEL_SLUG="claude-sonnet-4"  ; MODEL_NAME="Claude Sonnet 4" ;;
+  sonnet4-1m)   MODEL_SLUG="claude-sonnet-4"  ; MODEL_NAME="Claude Sonnet 4 (1M context)" ;;
+  sonnet37)     MODEL_SLUG="claude"           ; MODEL_NAME="Claude Sonnet 3.7" ;;
+  sonnet35)     MODEL_SLUG="claude"           ; MODEL_NAME="Claude Sonnet 3.5" ;;
   fable5)       MODEL_SLUG="claude-fable-5";    MODEL_NAME="Claude Fable 5" ;;
   fable51)      MODEL_SLUG="claude-fable-5-1";  MODEL_NAME="Claude Fable 5.1" ;;
   opus5)        MODEL_SLUG="claude-opus-5";     MODEL_NAME="Claude Opus 5" ;;
@@ -172,17 +175,17 @@ case "$MODEL" in
   opus45-1m)    MODEL_SLUG="claude-opus-4-5";   MODEL_NAME="Claude Opus 4.5 (1M context)" ;;
   opus41)       MODEL_SLUG="claude-opus-4-1";   MODEL_NAME="Claude Opus 4.1" ;;
   opus41-1m)    MODEL_SLUG="claude-opus-4-1";   MODEL_NAME="Claude Opus 4.1 (1M context)" ;;
-  opus4)        MODEL_SLUG="claude-opus-4-0";   MODEL_NAME="Claude Opus 4" ;;
-  opus4-1m)     MODEL_SLUG="claude-opus-4-0";   MODEL_NAME="Claude Opus 4 (1M context)" ;;
+  opus4)        MODEL_SLUG="claude-opus-4"  ;   MODEL_NAME="Claude Opus 4" ;;
+  opus4-1m)     MODEL_SLUG="claude-opus-4"  ;   MODEL_NAME="Claude Opus 4 (1M context)" ;;
   haiku45)      MODEL_SLUG="claude-haiku-4-5";  MODEL_NAME="Claude Haiku 4.5" ;;
   haiku45-1m)   MODEL_SLUG="claude-haiku-4-5";  MODEL_NAME="Claude Haiku 4.5 (1M context)" ;;
-  haiku35)      MODEL_SLUG="claude-3-5-haiku";  MODEL_NAME="Claude Haiku 3.5" ;;
+  haiku35)      MODEL_SLUG="claude"          ;  MODEL_NAME="Claude Haiku 3.5" ;;
   mythos5)      MODEL_SLUG="claude-mythos-5";   MODEL_NAME="Claude Mythos 5" ;;
   mythos51)     MODEL_SLUG="claude-mythos-5-1"; MODEL_NAME="Claude Mythos 5.1" ;;
   claudecode|claude-code) MODEL_SLUG="claude-code"; MODEL_NAME="Claude Code" ;;
   claude)       MODEL_SLUG="claude";            MODEL_NAME="Claude" ;;
   *)
-    MODEL_SLUG="claude-code"
+    MODEL_SLUG="claude"
     MODEL_NAME="Claude Code"
     ;;
 esac

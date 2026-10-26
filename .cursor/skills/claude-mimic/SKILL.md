@@ -250,7 +250,7 @@ When executing within automated GitHub Actions workflows via the Claude GitHub A
 - **Golden Rule**: Always match the target repository's established PR signature style.
 - **Surface Suffixes**: Never emit P3 (`via <Surface>`) unless the user explicitly specifies a surface environment. (Feature flag `tengu_pr_footer_surface_suffix` is default `false` in production; public repositories almost never contain `via <Surface>`).
 - **Changelog**: Omit `## Changelog` blocks and markers (retired in v2.1.270 binary; legacy opt-in only).
-- **Telemetry (`-shotted`)**: Do not emit P2 (`-shotted`) unless the user explicitly requests prompt count attribution. External repositories show desensitized short names (`claude-sonnet-5`, `claude-opus-4`).
+- **Telemetry (`-shotted`)**: Do not emit P2 (`-shotted`) unless the user explicitly requests prompt count attribution. External repositories show the desensitized short ID (`claude-opus-5-5`, `claude-sonnet-5`, `claude-opus-4-8`), or `claude` when the model is unrecognized; internal repositories show the raw model ID.
 - **Undercover Mode**: If the user or repository forbids AI attribution, omit all trailers and footer signatures completely (C5 / P6).
 
 ### Session IDs

@@ -22,11 +22,11 @@ The standard clean signature:
 Generated in automated `/commit-push-pr` command flows when session telemetry is active:
 
 ```markdown
-🤖 Generated with [Claude Code](https://claude.com/claude-code) (93% 3-shotted by claude-sonnet-5, 2 memories recalled)
+🤖 Generated with [Claude Code](https://claude.com/claude-code) (93% 3-shotted by claude-opus-5-5, 2 memories recalled)
 ```
 
 - **Fallthrough**: When all telemetry values are zero, it cleanly falls back to Form P1.
-- **Model Name Scope**: External repositories show desensitized family short names (`claude-sonnet-5`, `claude-opus-4`), while internal repositories may display versioned IDs (`claude-opus-4-8`).
+- **Model Name Scope**: External repositories show the desensitized short ID: the first entry of Claude Code's model table whose key the model ID contains (`claude-opus-5-5`, `claude-sonnet-5`, `claude-opus-4-8`; the `[1m]` suffix and date stamps drop), or plain `claude` when nothing matches (including legacy IDs such as `claude-3-7-sonnet-*`). Internal repositories show the raw model ID. Verified against the v2.1.310 binary.
 - **Advisory**: Keep Form P1 as default unless explicitly instructed.
 
 ---

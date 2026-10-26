@@ -143,7 +143,8 @@ if ($Title.Length -gt 70) {
 
 $productUrl = if ($LegacyUrl) { "https://claude.ai/code" } else { "https://claude.com/claude-code" }
 
-# Model Slugs
+# Model Slugs: the external-repo name Claude Code v2.1.310 prints in the P2
+# "-shotted by" line (first model-table key the ID contains, else "claude")
 $modelSlugMap = @{
     "opus55"      = "claude-opus-5-5"
     "opus55-1m"   = "claude-opus-5-5"
@@ -154,10 +155,10 @@ $modelSlugMap = @{
     "sonnet46-1m" = "claude-sonnet-4-6"
     "sonnet45"    = "claude-sonnet-4-5"
     "sonnet45-1m" = "claude-sonnet-4-5"
-    "sonnet4"     = "claude-sonnet-4-0"
-    "sonnet4-1m"  = "claude-sonnet-4-0"
-    "sonnet37"    = "claude-3-7-sonnet"
-    "sonnet35"    = "claude-3-5-sonnet"
+    "sonnet4"     = "claude-sonnet-4"
+    "sonnet4-1m"  = "claude-sonnet-4"
+    "sonnet37"    = "claude"
+    "sonnet35"    = "claude"
     "fable5"      = "claude-fable-5"
     "fable51"     = "claude-fable-5-1"
     "opus5"       = "claude-opus-5"
@@ -172,18 +173,18 @@ $modelSlugMap = @{
     "opus45-1m"   = "claude-opus-4-5"
     "opus41"      = "claude-opus-4-1"
     "opus41-1m"   = "claude-opus-4-1"
-    "opus4"       = "claude-opus-4-0"
-    "opus4-1m"    = "claude-opus-4-0"
+    "opus4"       = "claude-opus-4"
+    "opus4-1m"    = "claude-opus-4"
     "haiku45"     = "claude-haiku-4-5"
     "haiku45-1m"  = "claude-haiku-4-5"
-    "haiku35"     = "claude-3-5-haiku"
+    "haiku35"     = "claude"
     "mythos5"     = "claude-mythos-5"
     "mythos51"    = "claude-mythos-5-1"
     "claudecode"  = "claude-code"
     "claude"      = "claude"
 }
 $modelSlug = $modelSlugMap[$Model]
-if (-not $modelSlug) { $modelSlug = "claude-code" }
+if (-not $modelSlug) { $modelSlug = "claude" }
 
 # Map Surface Name strictly to the Claude Code surface switch (iRr() in v2.1.270, Rpi() in v2.1.310; cases unchanged)
 function Get-SurfaceDisplay([string]$s) {
