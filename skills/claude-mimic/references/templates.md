@@ -80,7 +80,7 @@ feat(planets): add resource abundance breakdown table
 
 Calculates mineral yield multipliers based on surface atmospheric density.
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01U7vy96qF63BugmboFm2wPw
 ```
 
@@ -147,7 +147,7 @@ When bootstrapping a brand-new repository (`git init`), commits do NOT fabricate
 ```text
 Initial commit
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ```
 
 ### Pattern B: Project Scaffolding
@@ -166,7 +166,7 @@ Revert "feat(wire): introduce binary frame compression"
 
 This reverts commit a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2.
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ```
 
 > [!NOTE]
@@ -179,9 +179,9 @@ Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 1. **Author vs. Committer Identity**: For all local commits, the `Author` and `Committer` headers belong strictly to the human user (`git config user.name` / `user.email`). Claude Code NEVER usurps author or committer status locally; Claude is represented solely via the `Co-Authored-By` trailer.
 2. **Individual Commits**: Each commit created during a session receives its own trailer representing the model active for that turn:
    ```text
-   Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+   Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
    ```
-3. **Multi-Model Branches**: When a feature branch spans multiple tasks or contexts, individual commits retain their respective models (`Claude Opus 5 (1M context)` for refactors, `Claude Sonnet 5` for verification). Do not rewrite historical trailers.
+3. **Multi-Model Branches**: When a feature branch spans multiple tasks or contexts, individual commits retain their respective models (`Claude Opus 5.5 (1M context)` for refactors, `Claude Sonnet 5.5` for verification). Do not rewrite historical trailers.
 4. **Merge Commits**: Merge commits (`Merge pull request #...` or `Merge branch ...`) **never receive trailers**.
 5. **Canonical Casing**: Natively emit canonical uppercase `Co-Authored-By:`. Only adopt lowercase `Co-authored-by:` if the target repository enforces strict linter rules requiring lowercase.
 6. **PR Body Trailer Placement**: When repositories configure `squash_merge_commit_message=PR_BODY`, trailers placed at the bottom of the PR body survive verbatim as Git trailers on the squash commit.

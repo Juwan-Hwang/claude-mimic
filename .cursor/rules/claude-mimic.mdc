@@ -12,7 +12,7 @@ When asked to commit changes, push code, or generate a pull request in Claude Co
 2. Read `git log --oneline -10` to adopt repository commit conventions.
 3. Default commit message: concise 1–2 sentences focusing on "why" over "what".
 4. Append RFC 2822 trailer preceded by exactly one blank line:
-   `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`
+   `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`
 5. Default PR signature:
    `🤖 Generated with [Claude Code](https://claude.com/claude-code)`
    (Do NOT emit `## Changelog` or `N-shotted` stats unless explicitly requested).

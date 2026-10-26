@@ -174,5 +174,5 @@ Once installed, verify by asking your assistant:
 The assistant should format the response with:
 1. Concise 1–2 sentence causal explanation.
 2. Verified pass commands.
-3. `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>` (separated by exactly one blank line).
+3. `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` (separated by exactly one blank line).
 4. `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.

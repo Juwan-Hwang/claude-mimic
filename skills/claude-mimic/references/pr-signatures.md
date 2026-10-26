@@ -65,7 +65,7 @@ Emitted when running in a hosted web bridge or remote container (`claude.ai/code
   ```
 - Git Commit Trailer (separated by single `\n`):
   ```text
-  Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+  Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
   Claude-Session: https://claude.ai/code/session_01U7vy96qF63BugmboFm2wPw
   ```
 
@@ -146,7 +146,7 @@ In GitHub pull request bodies, attribution trailers are observed in two legitima
    ## Test plan
    - [x] Run test suite
 
-   Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+   Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 
    🤖 Generated with [Claude Code](https://claude.com/claude-code)
    ```
@@ -162,7 +162,7 @@ In GitHub pull request bodies, attribution trailers are observed in two legitima
 
    🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
-   Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+   Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
    ```
 
 Both formats are authentic. CLI default standard output places the robot signature at the end.
@@ -244,30 +244,33 @@ graph TD
 
 ---
 
-## 4. Provider Identity Leak Guard: Canonical Whitelist (All 19 Catalog Models)
+## 4. Provider Identity Leak Guard: Canonical Whitelist (All 22 Catalog Models)
  
 The Provider Identity Leak Guard guarantees that no raw upstream provider identifiers (`deepseek`, `gpt-4`, `gemini`) leak into commit trailers or signatures.
 
-### Canonical Model Whitelist:
-1. `claude-sonnet-5` (Primary recommended default)
-2. `claude-sonnet-4-6` (Previous generation workhorse)
-3. `claude-sonnet-4-5`
-4. `claude-sonnet-4-0`
-5. `claude-3-7-sonnet` (Historical hybrid baseline)
-6. `claude-3-5-sonnet` (Historical baseline)
-7. `claude-fable-5-1` (Advanced autonomous planning)
-8. `claude-fable-5` (Autonomous architecture)
-9. `claude-opus-5` (Complex tasks flagship & reasoning)
-10. `claude-opus-4-8`
-11. `claude-opus-4-7`
-12. `claude-opus-4-6`
-13. `claude-opus-4-5`
-14. `claude-opus-4-1`
-15. `claude-opus-4-0`
-16. `claude-haiku-4-5` (Lightweight fast patches)
-17. `claude-3-5-haiku` (Historical lightweight)
-18. `claude-mythos-5-1` (Frontier systems & security - restricted tier)
-19. `claude-mythos-5` (Systems & security baseline - restricted tier)
+### Canonical Model Whitelist (22 catalog models, Claude Code v2.1.310):
+1. `claude-opus-5-5` (Claude Code default model since v2.1.280)
+2. `claude-sonnet-5-5` (Fast everyday tier)
+3. `claude-haiku-5-5` (Lightweight fast patches)
+4. `claude-fable-5-1` (Most capable GA model; long-horizon work)
+5. `claude-fable-5` (Era 3 autonomous architecture)
+6. `claude-opus-5` (Era 3 flagship)
+7. `claude-sonnet-5` (Era 3 workhorse)
+8. `claude-opus-4-8`
+9. `claude-opus-4-7`
+10. `claude-opus-4-6`
+11. `claude-opus-4-5`
+12. `claude-opus-4-1` (API retired)
+13. `claude-opus-4-0` (API retired)
+14. `claude-sonnet-4-6`
+15. `claude-sonnet-4-5` (API deprecated; retires 2026-11-30)
+16. `claude-sonnet-4-0` (API retired)
+17. `claude-3-7-sonnet` (API retired)
+18. `claude-3-5-sonnet` (API retired)
+19. `claude-haiku-4-5` (Previous lightweight tier)
+20. `claude-3-5-haiku` (API retired)
+21. `claude-mythos-5-1` (Restricted tier)
+22. `claude-mythos-5` (Restricted tier)
 
 ### Identity Fallbacks:
 - `claude-code` (Universal fallback for third-party models and unrecognized endpoints)

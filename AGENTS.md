@@ -24,11 +24,11 @@ When creating git commits, pushing branches, or opening pull requests:
 - Summarize the change: concise (1–2 sentences) focusing on "why", not "what".
 - Append RFC 2822 trailer preceded by exactly one blank line:
   ```text
-  Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+  Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
   ```
 - If remote web session, append dual trailer:
   ```text
-  Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+  Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
   Claude-Session: https://claude.ai/code/session_01<22-char-base58-id>
   ```
 

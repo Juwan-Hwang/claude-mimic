@@ -18,7 +18,7 @@ Under POSIX signal delivery, asynchronous interrupts aborted active worker
 threads without flushing intermediate ring buffers. Register a dedicated
 signal handler that drains buffered events before shutdown.
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ```
 
 **Key Takeaway**: Low-level systems commits prioritize causal explanation (why the interrupt occurred) over reciting diff lines.
@@ -41,7 +41,7 @@ Large multi-developer repositories managing complex feature branches across mult
     ```
   - Routine integration tests & endpoint implementations:
     ```text
-    Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
     ```
 - **Merge Commits**: Merge commits (`Merge pull request #...` or `Merge branch ...`) **never receive trailers**.
 - **Historical Integrity**: Never rewrite or homogenize earlier commit trailers when adding a new turn to an existing branch.
@@ -60,7 +60,7 @@ feat(metrics): add per-tenant throughput breakdown table
 Aggregates windowed event throughput across active tenants for real-time
 capacity planning.
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01U7vy96qF63BugmboFm2wPw
 ```
 
@@ -86,6 +86,10 @@ Claude-Session: https://claude.ai/code/session_01U7vy96qF63BugmboFm2wPw
 ## 4. Pattern 4: Cloud Ecosystem SDK Nomenclature
 
 Major cloud provider foundation model registries (e.g. AWS Bedrock, Google Cloud Vertex AI, and Anthropic mantle) organize the Anthropic model family into standard identifiers (as verified in provider SDK definitions):
+- `anthropic.claude-opus-5-5` / `us.anthropic.claude-opus-5-5` (Opus 5.5: Mantle / Bedrock cross-region profile)
+- `anthropic.claude-sonnet-5-5` / `us.anthropic.claude-sonnet-5-5` (Sonnet 5.5)
+- `anthropic.claude-haiku-5-5` / `us.anthropic.claude-haiku-5-5` (Haiku 5.5)
+- `us.anthropic.claude-fable-5-1` (Fable 5.1 Bedrock cross-region profile)
 - `anthropic.claude-opus-5` (Mantle / foundation model family identifier)
 - `us.anthropic.claude-fable-5` (Bedrock cross-region inference profile)
 - `anthropic.claude-sonnet-5` (Mantle / foundation model family identifier)
@@ -123,7 +127,7 @@ Revert "feat(wire): introduce binary frame compression"
 
 This reverts commit a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2.
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ```
 
 ### Downstream Maintainer Rebase Dynamics:

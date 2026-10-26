@@ -97,7 +97,7 @@ Author: Developer <dev@example.com>
 
     fix(auth): handle token expiration gracefully
 
-    Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ```
 
 *격식 있는 Claude Code 스타일 PR 본문:*

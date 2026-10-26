@@ -15,7 +15,7 @@ export default async function ({ registerCommand, registerRule }) {
     description: "Format git commits and PRs in Claude Code's dialect",
     handler: async (context) => {
       return {
-        instruction: "Format git commits and PRs in Claude Code dialect: concise why, RFC 2822 trailer 'Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>', and PR footer '🤖 Generated with [Claude Code](https://claude.com/claude-code)'."
+        instruction: "Format git commits and PRs in Claude Code dialect: concise why, RFC 2822 trailer 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>', and PR footer '🤖 Generated with [Claude Code](https://claude.com/claude-code)'."
       };
     }
   });
