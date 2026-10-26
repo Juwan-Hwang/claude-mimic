@@ -78,3 +78,17 @@ sh reproduce.sh      # → deliver/claude-mimic-promo-{en,zh}.rebuild.mp4
 Versions and seeds are pinned (`requirements.txt`, `fonts.sha256`, score rng 7, SFX jitter 11, room 3). A different Chromium build may move edge pixels slightly, never content or timing. A full rebuild was not re-verified for this delivery.
 
 *An independent community project. Not affiliated with Anthropic.*
+
+## QA (delivered cuts)
+
+| check | EN | ZH |
+|---|---|---|
+| duration / video | 58.5 s · 1920×1080 · 30 fps · H.264 High · yuv420p · BT.709 | same |
+| audio | AAC LC 256 kb/s · 48 kHz · −14.0 LUFS · −1.4 dBTP · LRA 4.8 LU | AAC LC 256 kb/s · 48 kHz · −14.0 LUFS · −1.7 dBTP · LRA 4.8 LU |
+| hits (`qa_audio.py`) | 13 of 14 at +20 ms (AAC priming); 46 s reads −60 ms because the detector catches the pre-hit swell — the score's energy steps at 46.00–46.02 s | same |
+| handoff (`handoff_check.py`) | 3D end frame vs vector lockup: max edge error 1 px | same layout |
+| accent (`qa_accent.py`) | ≤ 1 accent blob per frame except the caret's own motion streaks on the thesis glides | same |
+| copy (`lint_copy.py`) | clean | clean |
+| secrets (`scan_secrets.py`) | 0 findings | — |
+
+Fixed during QA: the finale dive unwound ~24 rad of accumulated spin in one second (a 4 rev/s wagon wheel that showed as stacked petal copies) — it now keeps the slow spin; the full field got a 20 % size margin (a petal gap left a notch at the frame edge for 4 frames); the typing caret is flagged as a discrete step so the renderer no longer blends two caret positions into a double asterisk; loudnorm targets −2.0 dBTP so the AAC file stays under −1 dBTP.

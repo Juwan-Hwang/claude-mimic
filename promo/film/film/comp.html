@@ -129,7 +129,7 @@ let STAR, TERM, MODELS, SW, STAR_C;   // star: logo-pixel outline; SW = its widt
 // ───────────────────────── the carry: the logo's asterisk, exactly one owner per frame ─────────────────────────
 const ROT = (t) => 0.55 * Math.max(0, t - 6.0);          // a slow spin, continuous over the whole film (radians)
 let CAR = null;
-function carry(x, y, w, o = 1, rot) { CAR = { x, y, w, o, rot }; }
+function carry(x, y, w, o = 1, rot, step = false) { CAR = { x, y, w, o, rot, step }; }   // step: a typing caret jumps a glyph, it does not travel (no shutter blur)
 function starTf(x, y, w, rotRad) { const k = w / SW; return `translate(${r2(x)} ${r2(y)}) rotate(${(rotRad * 180 / Math.PI).toFixed(3)}) scale(${k.toFixed(6)}) translate(${(-STAR_C[0]).toFixed(2)} ${(-STAR_C[1]).toFixed(2)})`; }
 function drawCarry(t) {
   const el = $('carryP');
@@ -138,8 +138,8 @@ function drawCarry(t) {
 }
 // full-frame field ⇄ caret: log-space size, the centre follows the size, so the field closes ONTO the caret
 const FIELD_W = () => SW * (1150 / 186) * 1.0;            // hub (inscribed r ≈ 186 logo px) covers the frame corners
-function fieldZoom(u, dot) {
-  const F = { x: 960, y: 540, w: FIELD_W() };
+function fieldZoom(u, dot, m = 1) {
+  const F = { x: 960, y: 540, w: FIELD_W() * m };   // m > 1: margin so no petal gap reaches the frame edge at any angle
   const w = Math.exp(lerp(Math.log(F.w), Math.log(dot.w), u));
   const k = (Math.log(F.w) - Math.log(w)) / (Math.log(F.w) - Math.log(dot.w));
   return { x: lerp(F.x, dot.x, k), y: lerp(F.y, dot.y, k), w };
@@ -233,16 +233,16 @@ function drawThesis(t) {
   let c;
   if (t < 6.55) { const f = fieldZoom(expoOut(seg(t, 6.0, 6.5)), penAt(th1, 0)); carry(f.x, f.y, f.w); return; }
   const n1 = nTyped(th1, t), n2 = nTyped(th2, t), n3 = nTyped(th3, t);
-  if (t < 7.2) c = penAt(th1, n1);
+  if (t < 7.2) c = { ...penAt(th1, n1), step: true };
   else if (t < 7.45) { const u = appleInOut(seg(t, 7.22, 7.44)); const a = penAt(th1, th1.text.length), b = penAt(th2, 0); c = { x: lerp(a.x, b.x, u), y: lerp(a.y, b.y, u), w: a.w }; }
-  else if (t < 9.6) c = penAt(th2, n2);
+  else if (t < 9.6) c = { ...penAt(th2, n2), step: true };
   else if (t < 10.0) { const u = appleInOut(seg(t, 9.6, 9.98)); const a = penAt(th2, th2.text.length), b = penAt(th3, 0); c = { x: lerp(a.x, b.x, u), y: lerp(a.y, b.y, u), w: a.w }; }
-  else c = penAt(th3, n3);
+  else c = { ...penAt(th3, n3), step: t < 11.45 };
   if (t >= 11.45) {                    // glide down onto the terminal's first prompt; the window opens out of it at 12.0
     const p = termCaretScreen(12.0), u = whip(seg(t, 11.45, 12.0));
     c = { x: lerp(c.x, p.x, u), y: lerp(c.y, p.y, u), w: lerp(c.w, p.w, u) };
   }
-  carry(c.x, c.y, c.w);
+  carry(c.x, c.y, c.w, 1, undefined, !!c.step);
 }
 
 // ───────────────────────── terminal (12–34, 38–42): the real session ─────────────────────────
@@ -503,8 +503,8 @@ function drawFin(t) {
   const n = drawLine(fin, t, 0, o);
   if (t < 46.0) return;
   const p = penAt(fin, n);
-  if (t < 48.85) { carry(p.x, p.y, p.w); return; }
-  const k = seg(t, 48.85, 49.85); const f = fieldZoom(1 - k * k * k, p); carry(f.x, f.y, f.w, 1, ROT(t) * (1 - k));
+  if (t < 48.85) { carry(p.x, p.y, p.w, 1, undefined, true); return; }
+  const k = seg(t, 48.85, 49.85); const f = fieldZoom(1 - k * k * k, p, 1.2); carry(f.x, f.y, f.w, 1);   // keep the slow spin: unwinding ~24 rad in 1 s was a 4 rev/s wagon wheel
 }
 
 // ───────────────────────── 3D frames + lockup ─────────────────────────
@@ -556,7 +556,7 @@ window.__seek = async (t) => {
 // screen-space travel across [t0, t1] (the renderer's motion-blur budget): the carry, the terminal camera + scroll, the reel
 function probePts(t) {
   const pts = [];
-  if (CAR) pts.push([CAR.x, CAR.y], [CAR.x + Math.min(CAR.w, 4000) / 2, CAR.y]);
+  if (CAR && !CAR.step) pts.push([CAR.x, CAR.y], [CAR.x + Math.min(CAR.w, 4000) / 2, CAR.y]);
   if (termOn(t)) { const c = camAt(TC, t), tp = topAt(t); pts.push(toS(c, [300, 200]), toS(c, [1600, 820]), toS(c, [400, 500 - tp * LH])); }
   if (t >= 34 && t < 38) pts.push([0, reelU(t) * RL.gap]);
   return pts;
