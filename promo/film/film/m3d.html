@@ -1,0 +1,114 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!--
+  claude-mimic launch film: the two 3D shots (three.js r170), rendered OFFLINE as frames by r3d_seq.py.
+    m3d.html?shot=open   6.0 s  a tiny orange asterisk blinks three times in the dark (a spinner waiting) → on bar 1 (2.0 s) it
+                                spins open to full size while the camera whips round it → settles square-on under a light
+                                sweep → 4.55–5.85 the camera pushes INTO its hub until the frame is solid orange
+    m3d.html?shot=end&ppu=&sx=&sy=   2.5 s  start inside the hub → pull back → the asterisk spins in and lands pixel-matched
+                                on the comp's vector asterisk (the one the mascot holds in logo.png)
+  Geometry: the asterisk traced from the repo's logo.png (gen/trace_star.py → data/star.json, logo pixels, y down).
+  World unit = 1 logo pixel, y up, origin = the asterisk's centroid. Front and back caps are UNLIT in the logo's own orange
+  (#E97F57) so the landing frame equals the flat 2D colour; the sides are a lit, darker orange so it reads as an object.
+-->
+<style>html,body{margin:0;background:#141413;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+import * as THREE from 'three';
+import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const Q = new URLSearchParams(location.search);
+const W = 1920, H = 1080, SHOT = Q.get('shot') || 'open';
+const INK = '#141413', ACCENT = '#E97F57', SIDE = '#B45A3B';
+const DEPTH = 64, BEV = 5, FRONT = DEPTH / 2 + BEV, FOV = 30, TANH = Math.tan((FOV / 2) * Math.PI / 180);
+
+const STAR = await (await fetch('data/star.json')).json();
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.setSize(W, H);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(INK);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.03).texture;
+
+function flipWinding(g) {                       // mirroring y reverses the triangle winding: flip it back so FrontSide still sees the front cap
+  const idx = g.index; if (idx) { const a = idx.array; for (let i = 0; i < a.length; i += 3) { const t = a[i + 1]; a[i + 1] = a[i + 2]; a[i + 2] = t; } idx.needsUpdate = true; return; }
+  const p = g.attributes.position; for (let i = 0; i < p.count; i += 3) { for (let k = 0; k < 3; k++) { const t = p.getComponent(i + 1, k); p.setComponent(i + 1, k, p.getComponent(i + 2, k)); p.setComponent(i + 2, k, t); } }
+  for (const key of ['normal', 'uv']) { const q = g.attributes[key]; if (!q) continue; for (let i = 0; i < q.count; i += 3) for (let k = 0; k < q.itemSize; k++) { const t = q.getComponent(i + 1, k); q.setComponent(i + 1, k, q.getComponent(i + 2, k)); q.setComponent(i + 2, k, t); } }
+  p.needsUpdate = true;
+}
+const loader = new SVGLoader();
+const shapes = SVGLoader.createShapes(loader.parse(`<svg xmlns="http://www.w3.org/2000/svg"><path d="${STAR.d}"/></svg>`).paths[0]);
+const geo = new THREE.ExtrudeGeometry(shapes, { depth: DEPTH, bevelEnabled: true, bevelThickness: BEV, bevelSize: 2, bevelOffset: 0, bevelSegments: 4, curveSegments: 24 });
+geo.translate(-STAR.cx, -STAR.cy, -DEPTH / 2); geo.scale(1, -1, 1); flipWinding(geo); geo.computeVertexNormals();
+const capMat = new THREE.MeshBasicMaterial({ color: ACCENT, toneMapped: false });
+const sideMat = new THREE.MeshPhysicalMaterial({ color: new THREE.Color(SIDE), roughness: 0.34, metalness: 0.0, clearcoat: 0.7, clearcoatRoughness: 0.18 });
+const star = new THREE.Mesh(geo, [capMat, sideMat]);
+const grp = new THREE.Group(); grp.add(star); scene.add(grp);
+const key = new THREE.SpotLight('#fff3e8', 0, 0, Math.PI / 6, 0.88, 0); key.position.set(-2600, 2100, 3700); scene.add(key); scene.add(key.target);
+const rim = new THREE.DirectionalLight('#e2e8ff', 0); rim.position.set(1500, 800, -2000); scene.add(rim);
+const sweep = new THREE.PointLight('#ffffff', 0, 0, 0); scene.add(sweep);
+const camera = new THREE.PerspectiveCamera(FOV, W / H, 2, 100000);
+
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const expoIn = (x) => (x <= 0 ? 0 : Math.pow(2, 10 * x - 10));
+const expoOut = (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * x));
+const expoInOut = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x < 0.5 ? Math.pow(2, 20 * x - 10) / 2 : (2 - Math.pow(2, -20 * x + 10)) / 2);
+const sineInOut = (x) => -(Math.cos(Math.PI * x) - 1) / 2;
+const cubicOut = (x) => 1 - Math.pow(1 - x, 3);
+function spring(x, w = 9, z = 0.55) { if (x <= 0) return 0; const wd = w * Math.sqrt(1 - z * z); return 1 - Math.exp(-z * w * x) * (Math.cos(wd * x) + (z * w / wd) * Math.sin(wd * x)); }
+function orbitCam(tx, ty, d, yaw, pitch, roll = 0) {
+  camera.position.set(tx + Math.sin(yaw) * Math.cos(pitch) * d, ty + Math.sin(pitch) * d, Math.cos(yaw) * Math.cos(pitch) * d);
+  camera.up.set(Math.sin(roll), Math.cos(roll), 0); camera.lookAt(tx, ty, 0); camera.updateProjectionMatrix();
+}
+function lights(li, t, s0, s1) {
+  key.intensity = 1.7 * li; rim.intensity = 1.6 * li; scene.environmentIntensity = 0.36 * li + 0.02;
+  const sw = seg(t, s0, s1);
+  sweep.position.set(lerp(-2600, 2600, sineInOut(sw)), lerp(900, -500, sineInOut(sw)), 700);
+  sweep.intensity = 2.6 * Math.sin(Math.PI * sw) * li;
+}
+const SW = STAR.bbox[2] - STAR.bbox[0];                  // ≈ 754 logo px across
+const dFit = SW * 1.9 / (2 * TANH * (W / H));            // the asterisk across ~53 % of the frame width
+const dInside = FRONT + 30;                               // the camera ends 30 px in front of the hub: solid orange
+
+// OPEN 6 s (120 BPM, bar = 2 s)
+function shotOpen(t) {
+  const on = (t >= 0.25 && t < 0.75) || (t >= 1.0 && t < 1.5) || t >= 1.75;
+  star.visible = on;
+  const g = spring(seg(t, 1.92, 4.2) * 2.2, 7.2, 0.58);                       // spin open on bar 1
+  const sc = lerp(0.085, 1, g);
+  grp.scale.set(sc, sc, sc);
+  grp.rotation.set(0, -Math.PI * 0.38 * sineInOut(seg(t, 1.92, 2.12)) * (1 - g), lerp(-2.2, 0, g));   // face-on while it waits; the swing starts with the spin
+  const p1 = cubicOut(seg(t, 0.0, 2.0)), w = expoInOut(seg(t, 1.85, 3.5)), st = sineInOut(seg(t, 3.2, 4.3));
+  let yaw = lerp(0.5, 0.38, p1); yaw = lerp(yaw, -0.34, w); yaw = lerp(yaw, 0, st);
+  let pitch = lerp(-0.14, -0.08, p1); pitch = lerp(pitch, 0.12, w); pitch = lerp(pitch, 0, st);
+  const roll = Math.sin(Math.PI * w) * 0.05 * (1 - st);
+  let d = lerp(dFit * 1.35, dFit * 1.22, p1); d = Math.exp(lerp(Math.log(d), Math.log(dFit * 1.06), w)); d = lerp(d, dFit, st);
+  const pu = expoIn(seg(t, 4.55, 5.85));
+  d = Math.exp(lerp(Math.log(d), Math.log(dInside), pu));
+  orbitCam(0, 0, d, yaw * (1 - pu), pitch * (1 - pu), roll);
+  lights(0.35 + 0.65 * cubicOut(seg(t, 0.6, 1.9)), t, 2.4, 4.6);
+}
+// END 2.5 s: inside the hub → pull back → the asterisk spins in → lands EXACTLY where the 2D asterisk is drawn
+const PPU = +(Q.get('ppu') || 0.45), SX = +(Q.get('sx') || 560), SY = +(Q.get('sy') || 560);
+function shotEnd(t) {
+  star.visible = true;
+  const f = spring(seg(t, 0.15, 2.4) * 2.2, 7.5, 0.6);
+  grp.scale.set(1, 1, 1); grp.rotation.set(0, lerp(Math.PI * 0.42, 0, f), lerp(1.1, 0, f));
+  const dL = FRONT + H / (2 * TANH * PPU);
+  const txL = (960 - SX) / PPU, tyL = (SY - 540) / PPU;
+  const p = expoOut(seg(t, 0.05, 1.9));
+  const d = Math.exp(lerp(Math.log(dInside), Math.log(dL), p));
+  const u = sineInOut(seg(t, 0.12, 1.9));
+  const set = seg(t, 1.5, 2.25), yaw = -0.12 * (1 - sineInOut(set)) * seg(t, 0, 0.6), pitch = 0.05 * (1 - sineInOut(set)) * seg(t, 0, 0.6);
+  orbitCam(lerp(0, txL, u), lerp(0, tyL, u), d, yaw, pitch, 0);
+  lights(1, t, 0.3, 2.2);
+}
+window.__seek = (t) => { (SHOT === 'open' ? shotOpen : shotEnd)(t); renderer.render(scene, camera); return true; };
+window.__info = () => ({ SW, dFit, dInside, FRONT });
+window.__ready = true;
+</script></body></html>

@@ -1,0 +1,30 @@
+$ git-claude-commit -t "chore: tidy up" -b "Nothing to see here."
+Git Safety Protocol: No staged changes found. Claude Code will not create empty commits.
+Please stage files using 'git add' before committing.
+$
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

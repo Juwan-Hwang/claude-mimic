@@ -1,0 +1,30 @@
+$ git add .env && git-claude-commit -t "chore: add env" -b "Local settings."
+Git Safety Protocol Warning: The following staged files likely contain secrets:
+.env
+Commit aborted to protect sensitive credentials.
+$
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

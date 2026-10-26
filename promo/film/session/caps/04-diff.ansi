@@ -1,0 +1,30 @@
+$ git diff HEAD
+[1mdiff --git a/src/token.js b/src/token.js[0m
+[1mindex 973ff89..77b8ea5 100644[0m
+[1m--- a/src/token.js[0m
+[1m+++ b/src/token.js[0m
+[36m@@ -1,9 +1,9 @@[39m
+ // Session token helpers.
+ export function isExpired(token, now = Date.now()) {
+[31m-  return token.exp * 1000 < now;[39m
+[32m+  return !token?.exp || token.exp * 1000 <= now;[39m
+ }
+
+ export function requireSession(token) {
+[31m-  if (isExpired(token)) throw new Error('session expired');[39m
+[32m+  if (isExpired(token)) return null; // caller refreshes[39m
+   return token.sub;
+ }
+$
+
+
+
+
+
+
+
+
+
+
+
+

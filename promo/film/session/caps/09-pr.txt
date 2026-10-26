@@ -1,0 +1,30 @@
+$ gh-claude-pr --dry-run -t "fix(auth): handle token expiration gracefully" \
+>   -s "- Handle expired session tokens gracefully in auth middleware" -p "- [x] Run unit test suite"
+==========================================
+Claude Mimic - PR Dry Run
+Title: fix(auth): handle token expiration gracefully (45 chars)
+==========================================
+## Summary
+- Handle expired session tokens gracefully in auth middleware
+
+## Test plan
+- [x] Run unit test suite
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+==========================================
+$
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

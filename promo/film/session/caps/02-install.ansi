@@ -1,0 +1,66 @@
+$ npx skills add Juwan-Hwang/claude-mimic -g -y
+
+[38;5;250m███████╗██╗  ██╗██╗██╗     ██╗     ███████╗[39m
+[38;5;248m██╔════╝██║ ██╔╝██║██║     ██║     ██╔════╝[39m
+[38;5;245m███████╗█████╔╝ ██║██║     ██║     ███████╗[39m
+[38;5;243m╚════██║██╔═██╗ ██║██║     ██║     ╚════██║[39m
+[38;5;240m███████║██║  ██╗██║███████╗███████╗███████║[39m
+[38;5;238m╚══════╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚══════╝[39m
+
+[90m┌[39m  [30m[46m skills [39m[49m
+[90m│[39m
+[32m◇[39m  Source: https://github.com/Juwan-Hwang/claude-mimic.git
+[90m│[39m
+[32m◇[39m  Repository cloned
+[90m│[39m
+[32m◇[39m  Found [32m1[39m skill
+[90m│[39m
+[34m●[39m  Skill: [36mclaude-mimic[39m
+[90m│[39m
+[90m│[39m  [2mTeach any AI coding assistant to speak Claude Code's exact Git dialect. Formats commits, trailers, PRs, a
+nd attribution to be indistinguishable from genuine Claude Code output.[0m
+[90m│[39m
+[32m◇[39m  79 agents
+[90m│[39m
+[34m●[39m  Installing to all agents
+
+[90m│[39m
+[32m◇[39m  Installation Summary [90m─────────────────────────────────────────────────────────╮[39m
+[90m│[39m                                                                                [90m│[39m
+[90m│[39m  [36m~/.agents/skills/claude-mimic[39m                                                 [90m│[39m
+[90m│[39m    [32muniversal:[39m Amp, Antigravity, Antigravity CLI, Cline, Codex +19 more         [90m│[39m
+[90m│[39m    [2msymlink →[0m AiderDesk, AstrBot, Autohand Code CLI, Augment, IBM Bob +50 more  [90m│[39m
+[90m│[39m                                                                                [90m│[39m
+[90m├────────────────────────────────────────────────────────────────────────────────╯[39m
+[90m│[39m
+[32m◇[39m  Security Risk Assessments [90m──────────────────────────────────╮[39m
+[90m│[39m                                                              [90m│[39m
+[90m│[39m                [2mGen[0m               [2mSocket[0m            [2mSnyk[0m      [90m│[39m
+[90m│[39m  [36mclaude-mimic[39m  [32mSafe[39m              [31m1 alert[39m           [32mLow Risk[39m  [90m│[39m
+[90m│[39m                                                              [90m│[39m
+[90m│[39m  [2mDetails:[0m [2mhttps://skills.sh/Juwan-Hwang/claude-mimic[0m         [90m│[39m
+[90m│[39m                                                              [90m│[39m
+[90m├──────────────────────────────────────────────────────────────╯[39m
+[90m│[39m
+[32m◇[39m  Installation complete
+
+[90m│[39m
+[32m◇[39m  [32mInstalled 1 skill[39m [90m─────────────────────────────────────────────────────────────╮[39m
+[90m│[39m                                                                                 [90m│[39m
+[90m│[39m  [32m✓[39m ~/.agents/skills/claude-mimic                                                [90m│[39m
+[90m│[39m    [32muniversal:[39m Amp, Antigravity, Antigravity CLI, Cline, Codex +19 more          [90m│[39m
+[90m│[39m    [2msymlinked:[0m AiderDesk, AstrBot, Autohand Code CLI, Augment, IBM Bob +49 more  [90m│[39m
+[90m│[39m                                                                                 [90m│[39m
+[90m├─────────────────────────────────────────────────────────────────────────────────╯[39m
+
+[90m│[39m
+[31m■[39m  [31mFailed to install 2[39m
+[90m│[39m
+[90m│[39m    [31m✗[39m claude-mimic → Eve: [2mEve does not support global skill installation[0m
+[90m│[39m
+[90m│[39m    [31m✗[39m claude-mimic → PromptScript: [2mPromptScript does not support global skill installation[0m
+
+[90m│[39m
+[90m└[39m  [32mDone![2m[39m  Review skills before use; they run with full agent permissions.[0m
+
+$

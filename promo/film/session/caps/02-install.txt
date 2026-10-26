@@ -1,0 +1,66 @@
+$ npx skills add Juwan-Hwang/claude-mimic -g -y
+
+███████╗██╗  ██╗██╗██╗     ██╗     ███████╗
+██╔════╝██║ ██╔╝██║██║     ██║     ██╔════╝
+███████╗█████╔╝ ██║██║     ██║     ███████╗
+╚════██║██╔═██╗ ██║██║     ██║     ╚════██║
+███████║██║  ██╗██║███████╗███████╗███████║
+╚══════╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚══════╝
+
+┌   skills
+│
+◇  Source: https://github.com/Juwan-Hwang/claude-mimic.git
+│
+◇  Repository cloned
+│
+◇  Found 1 skill
+│
+●  Skill: claude-mimic
+│
+│  Teach any AI coding assistant to speak Claude Code's exact Git dialect. Formats commits, trailers, PRs, a
+nd attribution to be indistinguishable from genuine Claude Code output.
+│
+◇  79 agents
+│
+●  Installing to all agents
+
+│
+◇  Installation Summary ─────────────────────────────────────────────────────────╮
+│                                                                                │
+│  ~/.agents/skills/claude-mimic                                                 │
+│    universal: Amp, Antigravity, Antigravity CLI, Cline, Codex +19 more         │
+│    symlink → AiderDesk, AstrBot, Autohand Code CLI, Augment, IBM Bob +50 more  │
+│                                                                                │
+├────────────────────────────────────────────────────────────────────────────────╯
+│
+◇  Security Risk Assessments ──────────────────────────────────╮
+│                                                              │
+│                Gen               Socket            Snyk      │
+│  claude-mimic  Safe              1 alert           Low Risk  │
+│                                                              │
+│  Details: https://skills.sh/Juwan-Hwang/claude-mimic         │
+│                                                              │
+├──────────────────────────────────────────────────────────────╯
+│
+◇  Installation complete
+
+│
+◇  Installed 1 skill ─────────────────────────────────────────────────────────────╮
+│                                                                                 │
+│  ✓ ~/.agents/skills/claude-mimic                                                │
+│    universal: Amp, Antigravity, Antigravity CLI, Cline, Codex +19 more          │
+│    symlinked: AiderDesk, AstrBot, Autohand Code CLI, Augment, IBM Bob +49 more  │
+│                                                                                 │
+├─────────────────────────────────────────────────────────────────────────────────╯
+
+│
+■  Failed to install 2
+│
+│    ✗ claude-mimic → Eve: Eve does not support global skill installation
+│
+│    ✗ claude-mimic → PromptScript: PromptScript does not support global skill installation
+
+│
+└  Done!  Review skills before use; they run with full agent permissions.
+
+$

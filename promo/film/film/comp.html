@@ -1,0 +1,625 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!--
+  claude-mimic · launch film. One seekable timeline; every frame is a pure function of t.
+  120 BPM (bar = 2 s), 58.5 s, two cuts: comp.html?lang=en | ?lang=zh.  ?t=12.3 draws that moment (for stills), ?hud shows t.
+  The carry element is the orange asterisk the mascot holds up in the repo's logo.png (traced: data/star.json). It is the
+  only accent-coloured thing in the film: a spinner in the dark, the typing caret, the terminal cursor, the reel's caret,
+  the bullet, the field the camera dives through, and finally the asterisk in the logo again.
+  The terminal is a real session (session/capture.sh → data/term.json), shown verbatim; rows cut are marked '│  …'.
+  Copy is the only thing that changes between cuts; commands, output, model names and the README's 0% / 100% are data.
+  Contract: __ready, __meta, __seek(t), __motion(t0,t1), __events(), __handoff(), __copy.
+-->
+<style>
+@font-face{font-family:"PFSF";src:url("fonts/PingFangSF.ttf") format("truetype");font-weight:100 900;font-display:block}
+@font-face{font-family:"JBM";src:url("fonts/JetBrainsMono-Regular.ttf") format("truetype");font-weight:400;font-display:block}
+@font-face{font-family:"JBM";src:url("fonts/JetBrainsMono-Bold.ttf") format("truetype");font-weight:700;font-display:block}
+html,body{margin:0;background:#000;overflow:hidden}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:#141413;font-family:"PFSF";color:#FAF9F5;font-kerning:normal}
+.abs{position:absolute;left:0;top:0}
+.mono{font-family:"JBM","DejaVu Sans Mono","Noto Color Emoji",monospace;font-variant-ligatures:none;font-feature-settings:"liga" 0,"calt" 0}
+.ln{position:absolute;left:0;top:0;white-space:pre;line-height:1}
+.ln span{display:inline-block;white-space:pre}
+#f3d{position:absolute;left:0;top:0;width:1920px;height:1080px}
+.cap{position:absolute;left:120px;white-space:nowrap;line-height:1}
+.capH{font-size:46px;font-variation-settings:'wght' 600;letter-spacing:-0.3px}
+.capS{font-size:26px;font-variation-settings:'wght' 450;color:#A3A199;letter-spacing:0.2px}
+html[lang=zh-Hans] .capH{letter-spacing:1px}
+html[lang=zh-Hans] .capS{letter-spacing:1.5px}
+.mask{position:absolute;left:0;overflow:hidden;width:1920px}
+#scrim{position:absolute;left:0;top:700px;width:1920px;height:380px;background:linear-gradient(180deg,rgba(20,20,19,0),rgba(20,20,19,0.92) 62%,rgba(20,20,19,0.96));opacity:0}
+#term{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+#twin{position:absolute;border-radius:16px;background:#1C1C1A;box-shadow:0 0 0 1px rgba(255,255,255,0.075),0 40px 120px rgba(0,0,0,0.55)}
+#tbar{position:absolute;left:0;top:0;height:44px;width:100%;border-bottom:1px solid rgba(255,255,255,0.06)}
+#tbar i{position:absolute;top:16px;width:13px;height:13px;border-radius:7px;background:#3A3A37}
+#ttitle{position:absolute;left:0;width:100%;top:14px;text-align:center;font-size:16px;color:#87867F;line-height:1}
+#tclip{position:absolute;overflow:hidden}
+.tr{position:absolute;left:0;top:0;font-size:22px;line-height:32px;height:32px;white-space:pre;color:#D9D7CE}
+.tr span{white-space:pre}
+.tr b{font-weight:700}
+.wash{position:absolute;left:0;top:0;background:rgba(250,249,245,0.085);border-radius:6px}
+.rl{position:absolute;left:0;top:0;font-size:48px;line-height:1;white-space:pre;color:#FAF9F5}
+.stN{position:absolute;left:0;top:0;font-size:132px;line-height:1;font-variation-settings:'wght' 620;white-space:pre;font-variant-numeric:tabular-nums;letter-spacing:-2px}
+.stL{position:absolute;left:0;top:0;font-size:54px;line-height:1;font-variation-settings:'wght' 500;white-space:pre;color:#D9D7CE}
+html[lang=zh-Hans] .stL{letter-spacing:2px}
+#logo{position:absolute;left:0;top:0;transform-origin:0 0}
+#fade{position:absolute;left:0;top:0;width:1920px;height:1080px;background:#000;opacity:0}
+#hud{position:absolute;right:16px;top:12px;font:16px monospace;color:#0f0;z-index:9}
+</style>
+<script src="mspring.js"></script>
+</head><body>
+<div id="stage">
+  <img id="f3d" style="display:none">
+  <div id="sT" class="abs"></div>
+  <!-- terminal (real session) -->
+  <div id="sTerm" class="abs" style="display:none;width:1920px;height:1080px">
+    <div id="term"><div id="twin"><div id="tbar"><i style="left:20px"></i><i style="left:42px"></i><i style="left:64px"></i><div id="ttitle" class="mono"></div></div></div>
+      <div id="tclip"><div id="twash" class="abs"></div><div id="trows" class="abs"></div></div></div>
+  </div>
+  <!-- model reel -->
+  <div id="sReel" class="abs" style="display:none;width:1920px;height:1080px"></div>
+  <!-- 0% / 0% / 100% -->
+  <div id="sStat" class="abs" style="display:none;width:1920px;height:1080px"></div>
+  <!-- lockup -->
+  <div id="sLock" class="abs" style="display:none;width:1920px;height:1080px"><img id="logo" src="brand/logo.png"><div id="lockTxt" class="abs"></div></div>
+  <svg id="carrySvg" class="abs" width="1920" height="1080" viewBox="0 0 1920 1080"><path id="lockStar" fill="#E97F57" style="display:none"/><path id="carryP" fill="#E97F57"/></svg>
+  <div id="scrim"></div>
+  <div id="caps" class="abs"></div>
+  <div id="fade"></div>
+  <div id="hud"></div>
+</div>
+<script>
+'use strict';
+const Q = new URLSearchParams(location.search);
+const LANG = Q.get('lang') === 'zh' ? 'zh' : 'en';
+if (LANG === 'zh') document.documentElement.lang = 'zh-Hans';
+const FPS = 30, BPM = 120, BAR = 2, BEAT = 0.5, DUR = 58.5;
+const ACC = '#E97F57', PAPER = '#FAF9F5', GRAPH = '#87867F';
+
+// ───────────────────────── copy (one language per cut; commands, output, model names, 0% / 100% are data) ─────────────────────────
+const COPY = {
+  en: {
+    th1: "Look like you're", th2: 'using Claude Code.', th3: "Even when you're not.",
+    beforeH: 'Every commit says who helped.', beforeS: 'Co-authored-by: whatever your agent runs on.',
+    instH: 'One line. Every agent you use.', instS: 'Cursor, Codex, Gemini CLI, OpenCode, Windsurf, Cline and more.',
+    readH: 'It reads the repo before it writes.', readS: "Status, diff and history first. The repo's own conventions win.",
+    afterH: "Claude Code's exact Git dialect.", afterS: 'Trailer on the last line, one blank line above, from noreply@anthropic.com.',
+    prH: 'Pull requests, 1:1.', prS: 'A title under 70 characters. Summary, Test plan, signature.',
+    reelH: 'The right Claude for the job.', reelS: '22 catalog models, 37 valid forms, checked against Claude Code v2.1.310.',
+    safeH: 'Safe by default.', safeS: 'No empty commits, no secrets, no amends, no force-push.',
+    st1: 'intelligence boost', st2: 'Anthropic API credits', st3: 'pure Claude aesthetic',
+    fin: 'Nobody has to know.',
+    disc: 'An independent community project. Not affiliated with Anthropic.',
+  },
+  zh: {
+    th1: '让别人以为，', th2: '你一直在用 Claude Code', th3: '哪怕你压根没用',
+    beforeH: '每个提交，都写着是谁帮的忙', beforeS: 'Co-authored-by 一行，背后是哪个模型一目了然',
+    instH: '一行安装，你用的 Agent 都能用', instS: 'Cursor、Codex、Gemini CLI、OpenCode、Windsurf、Cline 等等',
+    readH: '先读懂仓库，再动笔', readS: '先看 status、diff 和提交历史，仓库自己的规范优先',
+    afterH: '一字不差的 Claude Code 提交格式', afterS: '署名在最后一行，上方空一行，邮箱 noreply@anthropic.com',
+    prH: 'PR 也一比一还原', prS: '标题不超过 70 个字符，Summary、Test plan、署名一个不少',
+    reelH: '按活儿挑对 Claude', reelS: '22 个目录模型、37 种合法写法，对照 Claude Code v2.1.310 核验',
+    safeH: '默认就安全', safeS: '不提交空改动，不提交密钥，不 amend，不强推',
+    st1: '智商加成', st2: '官方额度', st3: '纯正 Claude 风味',
+    fin: '没人会知道',
+    disc: '独立社区项目，与 Anthropic 无隶属关系',
+  },
+}[LANG];
+window.__copy = COPY;
+
+// ───────────────────────── helpers ─────────────────────────
+const $ = (id) => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const lerp = (a, b, u) => a + (b - a) * u;
+const lerp2 = (a, b, u) => [lerp(a[0], b[0], u), lerp(a[1], b[1], u)];
+const expoIn = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : Math.pow(2, 10 * x - 10));
+const expoOut = (x) => (x >= 1 ? 1 : x <= 0 ? 0 : 1 - Math.pow(2, -10 * x));
+const { appleOut, appleInOut, whip } = MO;
+const easeInC = (x) => x * x * x;
+const cubicOut = (x) => 1 - Math.pow(1 - x, 3);
+const SPC = {}; const sp = (vd, b) => (SPC[vd + ':' + b] ||= MO.spring(vd, b));
+const r2 = (v) => Math.round(v * 100) / 100;
+const pending = [];
+function setSrc(img, src) { if (img.getAttribute('src') !== src) { img.setAttribute('src', src); pending.push(img.decode().catch(() => {})); } }
+function show(el, on) { el.style.display = on ? '' : 'none'; }
+function op(el, v) { el.style.opacity = clamp(v).toFixed(3); }
+
+let STAR, TERM, MODELS, SW, STAR_C;   // star: logo-pixel outline; SW = its width in logo px
+// ───────────────────────── the carry: the logo's asterisk, exactly one owner per frame ─────────────────────────
+const ROT = (t) => 0.55 * Math.max(0, t - 6.0);          // a slow spin, continuous over the whole film (radians)
+let CAR = null;
+function carry(x, y, w, o = 1, rot) { CAR = { x, y, w, o, rot }; }
+function starTf(x, y, w, rotRad) { const k = w / SW; return `translate(${r2(x)} ${r2(y)}) rotate(${(rotRad * 180 / Math.PI).toFixed(3)}) scale(${k.toFixed(6)}) translate(${(-STAR_C[0]).toFixed(2)} ${(-STAR_C[1]).toFixed(2)})`; }
+function drawCarry(t) {
+  const el = $('carryP');
+  if (!CAR || CAR.o <= 0) { show(el, false); return; }
+  show(el, true); el.setAttribute('transform', starTf(CAR.x, CAR.y, CAR.w, CAR.rot ?? ROT(t))); el.style.opacity = CAR.o;
+}
+// full-frame field ⇄ caret: log-space size, the centre follows the size, so the field closes ONTO the caret
+const FIELD_W = () => SW * (1150 / 186) * 1.0;            // hub (inscribed r ≈ 186 logo px) covers the frame corners
+function fieldZoom(u, dot) {
+  const F = { x: 960, y: 540, w: FIELD_W() };
+  const w = Math.exp(lerp(Math.log(F.w), Math.log(dot.w), u));
+  const k = (Math.log(F.w) - Math.log(w)) / (Math.log(F.w) - Math.log(dot.w));
+  return { x: lerp(F.x, dot.x, k), y: lerp(F.y, dot.y, k), w };
+}
+
+// ───────────────────────── captions ─────────────────────────
+const CAPS = [];
+function caption(id, t0, t1, head, sub) { CAPS.push({ id, t0, t1, head, sub }); }
+function buildCaps() {
+  const root = $('caps');
+  for (const c of CAPS) {
+    const mk = (cls, txt, base, size) => {
+      const m = document.createElement('div'); m.className = 'mask'; m.style.top = (base - size * 1.05) + 'px'; m.style.height = (size * 1.4) + 'px';
+      const d = document.createElement('div'); d.className = 'cap ' + cls; d.textContent = txt; d.style.top = (size * 0.05) + 'px';
+      m.appendChild(d); root.appendChild(m); return { m, d };
+    };
+    c.h = mk('capH', c.head, 950, 46); c.s = c.sub ? mk('capS', c.sub, 996, 26) : null;
+  }
+}
+function drawCaps(t) {
+  let scrim = 0;
+  for (const c of CAPS) {
+    const on = t >= c.t0 - 0.01 && t < c.t1 + 0.3;
+    show(c.h.m, on); if (c.s) show(c.s.m, on);
+    if (!on) continue;
+    scrim = Math.max(scrim, seg(t, c.t0 - 0.2, c.t0 + 0.1) * (1 - seg(t, c.t1, c.t1 + 0.3)));
+    [c.h, c.s].forEach((L, i) => {
+      if (!L) return;
+      const a = sp(0.5, 0)(t - c.t0 - i * 0.065), out = easeInC(seg(t, c.t1, c.t1 + 0.28));
+      const y = Math.round((1 - a) * 64 + out * 26);
+      L.d.style.transform = `translateY(${y}px)`; op(L.d, (1 - out));
+    });
+  }
+  return scrim;
+}
+
+// ───────────────────────── typed lines (thesis + finale) ─────────────────────────
+const LINES = {};
+function typedLine(id, text, size, wght, t0, dur, track) {
+  const d = document.createElement('div'); d.className = 'ln'; d.style.fontSize = size + 'px';
+  d.style.fontVariationSettings = `'wght' ${wght}`; if (track != null) d.style.letterSpacing = track + 'px';
+  for (const ch of [...text]) { const s = document.createElement('span'); s.textContent = ch; d.appendChild(s); }
+  $('sT').appendChild(d);
+  LINES[id] = { el: d, text: [...text], size, t0, dur, spans: [...d.children], right: [], x: 0, base: 0 };
+  return LINES[id];
+}
+function measureLine(L) { const r0 = L.el.getBoundingClientRect(); L.right = L.spans.map((s) => s.getBoundingClientRect().right - r0.left); L.width = L.right[L.right.length - 1]; }
+function nTyped(L, t) { return Math.floor(clamp((t - L.t0) / L.dur) * L.text.length + 1e-6); }
+function drawLine(L, t, dy = 0, o = 1) {
+  const n = nTyped(L, t);
+  L.spans.forEach((s, i) => { s.style.opacity = i < n ? 1 : 0; });
+  L.el.style.transform = `translate(${Math.round(L.x)}px,${Math.round(L.base - L.size * 0.86 + dy)}px)`;
+  op(L.el, o); show(L.el, true);
+  return n;
+}
+function penAt(L, n) {   // the asterisk as the pen: 0.5 em wide, centred on the x-height, just after the last glyph
+  const s = L.size, w = s * 0.5;
+  return { x: L.x + (n > 0 ? L.right[n - 1] : 0) + s * 0.1 + w / 2, y: L.base - s * 0.36, w };
+}
+const keyEvents = [];
+function lineKeys(L, every) { const n = L.text.length; for (let i = 0; i < n; i++) if (L.text[i] !== ' ' && (i % every === 0)) keyEvents.push({ t: L.t0 + (i + 0.5) * L.dur / n, kind: 'key' }); }
+
+// ───────────────────────── timeline (120 BPM; bars) ─────────────────────────
+//  0–6 3D open · 6–12 thesis · 12–16 before · 16–20 install · 20–26 read + commit · 26–30 after · 30–34 PR
+//  34–38 model reel · 38–42 safety · 42–46 0% / 0% / 100% · 46–50 finale · 50–52.5 3D reprise · 52.5–58.5 lockup
+const TH = 112;
+let th1, th2, th3, fin;
+function buildType() {
+  const tr = LANG === 'zh' ? 1 : -1.5;
+  th1 = typedLine('th1', COPY.th1, TH, 600, 6.55, 0.7, tr);
+  th2 = typedLine('th2', COPY.th2, TH, 600, 7.45, 0.8, tr);
+  th3 = typedLine('th3', COPY.th3, TH, 600, 10.0, 0.9, tr);
+  fin = typedLine('fin', COPY.fin, 120, 600, 46.2, 0.9, tr);
+}
+function layoutType() {
+  [th1, th2, th3, fin].forEach(measureLine);
+  const lh = LANG === 'zh' ? 1.32 : 1.18;
+  const mw = Math.max(th1.width, th2.width), x0 = Math.round((1920 - mw) / 2);
+  th1.x = x0; th2.x = x0; th1.base = Math.round(540 - TH * lh / 2 + TH * 0.36); th2.base = Math.round(th1.base + TH * lh);
+  th3.x = Math.round((1920 - th3.width) / 2); th3.base = Math.round(540 + TH * 0.36);
+  fin.x = Math.round((1920 - fin.width) / 2); fin.base = Math.round(540 + 120 * 0.36);
+  const ev = LANG === 'zh' ? 1 : 2; [th1, th2, th3, fin].forEach((L) => lineKeys(L, ev));
+}
+function drawThesis(t) {
+  const on = t >= 6 && t < 12.05; show($('sT'), on || (t >= 46 && t < 49.7));
+  if (!on) { [th1, th2, th3].forEach((L) => show(L.el, false)); return; }
+  const outA = easeInC(seg(t, 9.6, 9.92));
+  if (t < 9.95) { drawLine(th1, t, -outA * 40, 1 - outA); drawLine(th2, t, -outA * 40, 1 - outA); } else { show(th1.el, false); show(th2.el, false); }
+  const outB = easeInC(seg(t, 11.45, 11.8));
+  if (t >= 9.6) drawLine(th3, t, -outB * 40, 1 - outB); else show(th3.el, false);
+  let c;
+  if (t < 6.55) { const f = fieldZoom(expoOut(seg(t, 6.0, 6.5)), penAt(th1, 0)); carry(f.x, f.y, f.w); return; }
+  const n1 = nTyped(th1, t), n2 = nTyped(th2, t), n3 = nTyped(th3, t);
+  if (t < 7.2) c = penAt(th1, n1);
+  else if (t < 7.45) { const u = appleInOut(seg(t, 7.22, 7.44)); const a = penAt(th1, th1.text.length), b = penAt(th2, 0); c = { x: lerp(a.x, b.x, u), y: lerp(a.y, b.y, u), w: a.w }; }
+  else if (t < 9.6) c = penAt(th2, n2);
+  else if (t < 10.0) { const u = appleInOut(seg(t, 9.6, 9.98)); const a = penAt(th2, th2.text.length), b = penAt(th3, 0); c = { x: lerp(a.x, b.x, u), y: lerp(a.y, b.y, u), w: a.w }; }
+  else c = penAt(th3, n3);
+  if (t >= 11.45) {                    // glide down onto the terminal's first prompt; the window opens out of it at 12.0
+    const p = termCaretScreen(12.0), u = whip(seg(t, 11.45, 12.0));
+    c = { x: lerp(c.x, p.x, u), y: lerp(c.y, p.y, u), w: lerp(c.w, p.w, u) };
+  }
+  carry(c.x, c.y, c.w);
+}
+
+// ───────────────────────── terminal (12–34, 38–42): the real session ─────────────────────────
+const WIN = { x: 200, y: 92, w: 1520, h: 784 }, TBAR = 44, PADX = 34, PADY = 18, LH = 32, FS = 22;
+const VIS = Math.floor((WIN.h - TBAR - PADY * 2) / LH);       // 22 rows on screen
+let ADV = 13.2, BLOCK_K = 1.1;                                                   // measured in __ready
+const CX0 = WIN.x + PADX, CY0 = WIN.y + TBAR + PADY;            // content origin (window space = unzoomed screen px)
+// beats: [capture, t0 of typing, typing duration, clear first?, output row step]
+const PLAN = [
+  ['01-before', 12.35, 0.55, true, 0.04],
+  ['02-install', 16.15, 0.85, true, 0.04],
+  ['03-status', 20.15, 0.3, true, 0.035],
+  ['04-diff', 21.0, 0.35, false, 0.03],
+  ['05-log', 22.35, 0.45, false, 0.04],
+  ['06-add', 23.2, 0.42, false, 0.04],
+  ['07-commit', 23.85, 1.1, false, 0.05],
+  ['08-after', 26.15, 0.35, true, 0.045],
+  ['09-pr', 30.15, 1.05, true, 0.04],
+  ['10-empty', 38.25, 0.7, true, 0.06],
+  ['11-env', 39.95, 0.8, false, 0.06],
+];
+const ROWS = [], CLEARS = [], CMDS = [];
+const COLMAP = { '#cd3131': '#C24E4E', '#f14c4c': '#C24E4E', '#0dbc79': '#8DBF8B', '#23d18b': '#8DBF8B', '#11a8cd': '#7FA6B8', '#29b8db': '#7FA6B8',
+  '#e5e510': '#D8C27A', '#f5f543': '#D8C27A', '#2472c8': '#7FA6B8', '#3b8eea': '#7FA6B8', '#bc3fbc': '#B79BC9', '#d670d6': '#B79BC9', '#000000': '#141413' };
+function spanEl(s) {
+  const e = document.createElement(s.b ? 'b' : 'span'); e.textContent = s.t;
+  const fg = s.fg && (COLMAP[s.fg] || s.fg), bg = s.bg && (COLMAP[s.bg] || s.bg);
+  if (fg) e.style.color = fg; if (bg) e.style.background = bg; if (s.d) e.style.opacity = 0.6; return e;
+}
+function buildTerm() {
+  $('ttitle').textContent = 'acme-auth — bash';
+  const root = $('trows'); let idx = 0, prevEnd = 12.05;
+  for (const [name, t0, dur, clear, step] of PLAN) {
+    const B = TERM[name];
+    if (clear) { CLEARS.push({ t: Math.floor(t0 / BAR) * BAR, row: idx }); prevEnd = Math.floor(t0 / BAR) * BAR + 0.05; }
+    // command rows: typed at a fixed rate over `dur` across all its lines
+    const lens = B.cmd.map((l) => [...l].length - 2), tot = lens.reduce((a, b) => a + b, 0);
+    let tt = t0; const cmd = { name, rows: [], t0, dur, end: t0 + dur };
+    B.cmd.forEach((line, li) => {
+      const d = document.createElement('div'); d.className = 'tr mono';
+      const pr = document.createElement('span'); pr.textContent = line.slice(0, 2); pr.style.color = GRAPH; d.appendChild(pr);
+      const chars = [...line.slice(2)].map((ch) => { const s = document.createElement('span'); s.textContent = ch; d.appendChild(s); return s; });
+      root.appendChild(d);
+      const ld = dur * lens[li] / tot;
+      const R = { el: d, kind: 'cmd', idx: idx++, show: li === 0 ? Math.min(prevEnd, t0 - 0.05) : tt, t0: tt, dur: ld, chars, n: chars.length };
+      ROWS.push(R); cmd.rows.push(R); tt += ld;
+    });
+    CMDS.push(cmd);
+    let ot = cmd.end + 0.12;
+    B.out.forEach((spans, k) => {
+      const d = document.createElement('div'); d.className = 'tr mono';
+      const txt = spans.map((s) => s.t).join('');
+      let host = d;
+      if (/[█║═╗╔╝╚]/.test(txt)) { host = document.createElement('div'); host.style.transform = `scaleY(${BLOCK_K.toFixed(4)})`; host.style.transformOrigin = '0 50%'; host.style.height = LH + 'px'; d.appendChild(host); }   // block art: fill the whole cell like a real terminal
+      spans.forEach((s) => host.appendChild(spanEl(s)));
+      if (!spans.length) d.textContent = ' ';
+      root.appendChild(d);
+      ROWS.push({ el: d, kind: 'out', idx: idx++, show: ot + k * step, text: spans.map((s) => s.t).join('') });
+    });
+    prevEnd = B.out.length ? ot + (B.out.length - 1) * step + 0.1 : cmd.end + 0.12;
+    cmd.outEnd = prevEnd;
+  }
+  TOTAL_ROWS = idx;
+  buildScroll();
+}
+let TOTAL_ROWS = 0, SCROLL = [];
+function clearRowAt(t) { let r = 0; for (const c of CLEARS) if (c.t <= t) r = c.row; return r; }
+function targetTop(t) {
+  let last = -1; for (const R of ROWS) if (R.show <= t) last = Math.max(last, R.idx);
+  return Math.max(clearRowAt(t), last - VIS + 2);
+}
+function buildScroll() {                      // top(t) = top0 + Σ Δ · spring(t − tΔ): pure in t, smooth, and on the same times as the rows
+  const times = [...new Set([...ROWS.map((R) => R.show), ...CLEARS.map((c) => c.t)])].sort((a, b) => a - b);
+  let prev = targetTop(0); SCROLL = [{ t: -1, d: prev }];
+  for (const tt of times) { const v = targetTop(tt + 1e-6); if (v !== prev) { SCROLL.push({ t: tt, d: v - prev, big: Math.abs(v - prev) > 6 }); prev = v; } }
+}
+function topAt(t) { let v = 0; for (const s of SCROLL) v += s.t < 0 ? s.d : s.d * (s.big ? sp(0.42, 0) : sp(0.22, 0))(t - s.t); return v; }
+function rowY(idx, t) { return CY0 + (idx - topAt(t)) * LH; }        // window space, top of the row box
+function rowOf(name, k) { const c = CMDS.find((c) => c.name === name); return c.rows[c.rows.length - 1].idx + 1 + k; }
+// the cursor: after the typed text, else at the newest prompt
+function termCaretWin(t) {
+  let best = null;
+  for (const c of CMDS) {
+    const first = c.rows[0]; if (first.show > t) break;
+    best = { row: first, col: 2 };
+    for (const R of c.rows) if (t >= R.t0) { const n = Math.floor(clamp((t - R.t0) / R.dur) * R.n + 1e-6); best = { row: R, col: 2 + n }; }
+    if (t >= c.end + 0.1) best = { row: null, idx: c.rows[c.rows.length - 1].idx + 1, col: 0, after: c };
+  }
+  if (!best) best = { row: ROWS[0], col: 2 };
+  if (best.row === null) {                     // output printing: the cursor rides the last printed row; it hops to the next prompt row when that appears
+    const nxt = ROWS.find((R) => R.kind === 'cmd' && R.idx >= best.idx);
+    if (nxt && nxt.show <= t) best = { row: nxt, col: 2 };
+    else { let last = null; for (const R of ROWS) if (R.kind === 'out' && R.show <= t && R.idx >= best.idx) last = R; best = last ? { idxRow: last.idx + 1, col: 0 } : { idxRow: best.idx, col: 0 }; }
+  }
+  const idx = best.row ? best.row.idx : best.idxRow;
+  return { x: CX0 + best.col * ADV + ADV * 0.62, y: rowY(idx, t) + LH / 2, w: 17 };
+}
+// camera in window space (keys K(t, focus, screen pos, zoom, easing))
+function K(arr, t, f, s, z, e) { arr.push({ t, f, s, z, e: e || ((u) => u) }); }
+function camAt(arr, t) {
+  if (t <= arr[0].t) return arr[0];
+  for (let i = 1; i < arr.length; i++) {
+    const a = arr[i - 1], b = arr[i];
+    if (t <= b.t) { const u = b.e(seg(t, a.t, b.t)); return { f: lerp2(a.f, b.f, u), s: lerp2(a.s, b.s, u), z: Math.exp(lerp(Math.log(a.z), Math.log(b.z), u)) }; }
+  }
+  return arr[arr.length - 1];
+}
+const toS = (c, p) => [c.s[0] + (p[0] - c.f[0]) * c.z, c.s[1] + (p[1] - c.f[1]) * c.z];
+const TC = [];
+const WASH = [];                               // highlighted rows: [capture, out row (first), out row (last), t0, t1]
+function buildTermCam() {
+  const C = [960, 540];
+  const focus = (name, k0, k1, tHold, cols) => [CX0 + cols * ADV / 2, (rowY(rowOf(name, k0), tHold) + rowY(rowOf(name, k1), tHold) + LH) / 2];
+  K(TC, 12.0, C, C, 1); K(TC, 13.55, C, C, 1);
+  K(TC, 14.1, focus('01-before', 4, 7, 14.2, 44), [960, 430], 1.5, sp(0.55, 0.14)); K(TC, 15.5, focus('01-before', 4, 7, 14.2, 44), [960, 430], 1.52);
+  K(TC, 16.0, C, C, 1, appleInOut);
+  K(TC, 18.75, C, C, 1); K(TC, 19.25, focus('02-install', 22, 28, 19.3, 84), [960, 440], 1.22, sp(0.55, 0.14)); K(TC, 19.65, focus('02-install', 22, 28, 19.3, 84), [960, 440], 1.23);
+  K(TC, 20.05, C, C, 1, appleInOut);
+  K(TC, 25.2, C, C, 1); K(TC, 25.75, C, C, 1);
+  K(TC, 26.9, C, C, 1); K(TC, 27.45, focus('08-after', 8, 8, 27.5, 60), [960, 430], 1.72, sp(0.55, 0.14)); K(TC, 29.4, focus('08-after', 8, 8, 27.5, 60), [960, 430], 1.74);
+  K(TC, 29.95, C, C, 1, appleInOut);
+  K(TC, 31.7, C, C, 1); K(TC, 32.2, focus('09-pr', 4, 10, 32.3, 66), [960, 440], 1.3, sp(0.55, 0.14)); K(TC, 33.5, focus('09-pr', 4, 10, 32.3, 66), [960, 440], 1.31);
+  K(TC, 37.9, C, C, 1); K(TC, 38.95, C, C, 1);
+  K(TC, 39.45, focus('10-empty', 0, 0, 39.5, 88), [960, 430], 1.28, sp(0.55, 0.14));
+  K(TC, 40.8, focus('10-empty', 0, 0, 39.5, 88), [960, 430], 1.29);
+  K(TC, 41.25, focus('11-env', 2, 2, 41.2, 48), [960, 470], 1.32, sp(0.5, 0.1)); K(TC, 41.6, focus('11-env', 2, 2, 41.2, 48), [960, 470], 1.33);
+  WASH.push(['01-before', 7, 7, 14.05, 15.6], ['02-install', 24, 26, 19.2, 19.75], ['07-commit', 1, 1, 25.25, 25.95], ['08-after', 8, 8, 27.4, 29.5],
+    ['09-pr', 10, 10, 32.35, 33.55], ['10-empty', 0, 0, 39.3, 40.85], ['11-env', 2, 2, 41.0, 41.7]);
+  const root = $('twash'); WASH.forEach((w) => { const d = document.createElement('div'); d.className = 'wash'; root.appendChild(d); w.el = d; });
+}
+function termOn(t) { return (t >= 12.0 && t < 34.05) || (t >= 37.9 && t < 42.05); }
+function termCaretScreen(t) { const c = termCaretWin(t), cam = camAt(TC, t), p = toS(cam, [c.x, c.y]); return { x: p[0], y: p[1], w: c.w * cam.z }; }
+function winOpen(t) {      // 0 → 1: the window opens out of the cursor (and closes back into it)
+  if (t < 34) return expoOut(seg(t, 12.0, 12.45)) * (1 - appleInOut(seg(t, 33.5, 33.78)));
+  return expoOut(seg(t, 37.95, 38.35)) * (1 - appleInOut(seg(t, 41.5, 41.78)));
+}
+function drawTerm(t) {
+  const on = termOn(t); show($('sTerm'), on); if (!on) return;
+  const cam = camAt(TC, t);
+  $('term').style.transform = `translate(${r2(cam.s[0])}px,${r2(cam.s[1])}px) scale(${cam.z.toFixed(5)}) translate(${r2(-cam.f[0])}px,${r2(-cam.f[1])}px)`;
+  const u = winOpen(t), cw = termCaretWin(t);
+  const tw = $('twin'); Object.assign(tw.style, { left: WIN.x + 'px', top: WIN.y + 'px', width: WIN.w + 'px', height: WIN.h + 'px' });
+  const L = lerp(cw.x - WIN.x, 0, u), Tt = lerp(cw.y - WIN.y, 0, u), R = lerp(WIN.x + WIN.w - cw.x, 0, u), B = lerp(WIN.y + WIN.h - cw.y, 0, u);
+  tw.style.clipPath = `inset(${r2(Tt)}px ${r2(R)}px ${r2(B)}px ${r2(L)}px round 16px)`;
+  const tc = $('tclip'); Object.assign(tc.style, { left: (WIN.x + 1) + 'px', top: (WIN.y + TBAR) + 'px', width: (WIN.w - 2) + 'px', height: (WIN.h - TBAR - 1) + 'px' });
+  tc.style.clipPath = tw.style.clipPath.replace(/inset\(([-\d.]+)px/, (m, a) => `inset(${r2(Math.max(0, +a - TBAR))}px`);
+  op($('trows'), seg(u, 0.55, 1)); op($('twash'), seg(u, 0.55, 1));
+  const top = topAt(t);
+  for (const Rw of ROWS) {
+    const vis = Rw.show <= t && Rw.idx >= top - 1.2 && Rw.idx < top + VIS + 0.5;
+    show(Rw.el, vis); if (!vis) continue;
+    Rw.el.style.transform = `translate(${PADX - 1}px,${r2((Rw.idx - top) * LH + PADY)}px)`;
+    Rw.el.style.opacity = clamp(1 - (top - Rw.idx) * 2.2).toFixed(3);
+    if (Rw.kind === 'cmd') { const n = t < Rw.t0 ? 0 : Math.floor(clamp((t - Rw.t0) / Rw.dur) * Rw.n + 1e-6); Rw.chars.forEach((s, i) => { s.style.opacity = i < n ? 1 : 0; }); }
+  }
+  for (const w of WASH) {
+    const [name, k0, k1, t0, t1] = w; const a = seg(t, t0, t0 + 0.25) * (1 - seg(t, t1 - 0.25, t1));
+    show(w.el, a > 0); if (a <= 0) continue;
+    const i0 = rowOf(name, k0), i1 = rowOf(name, k1);
+    const txt = ROWS.filter((R) => R.idx >= i0 && R.idx <= i1).map((R) => [...R.text.replace(/\s+$/, '')].length);
+    const cols = Math.max(...txt);
+    Object.assign(w.el.style, { left: (PADX - 12) + 'px', top: r2((i0 - top) * LH + PADY - 1) + 'px', width: r2(cols * ADV * appleOut(seg(t, t0, t0 + 0.4)) + 24) + 'px', height: ((i1 - i0 + 1) * LH + 2) + 'px' });
+    op(w.el, a);
+  }
+  // the cursor (carry) — exactly one owner: the terminal from its open until the hand-off out
+  if (t < 12.0) return;
+  const p = termCaretScreen(t);
+  if (t >= 33.75 && t < 34.05) { const q = reelCaret(34.05), v = whip(seg(t, 33.75, 34.05)); carry(lerp(p.x, q.x, v), lerp(p.y, q.y, v), lerp(p.w, q.w, v)); return; }
+  if (t >= 41.75) { const q = statDot(42.05), v = whip(seg(t, 41.75, 42.05)); carry(lerp(p.x, q.x, v), lerp(p.y, q.y, v), lerp(p.w, q.w, v)); return; }
+  if (t >= 37.9 && t < 38.0) return;   // reel still owns it for the first frames of the re-open
+  carry(p.x, p.y, p.w);
+}
+
+// ───────────────────────── model reel 34–38 ─────────────────────────
+const RL = { x0: 168, base: 556, gap: 72, size: 48 };
+let REEL = [], rPre, rSuf, RADV;
+function buildReel() {
+  const root = $('sReel');
+  const mk = (txt, color) => { const d = document.createElement('div'); d.className = 'rl mono'; d.textContent = txt; if (color) d.style.color = color; root.appendChild(d); return d; };
+  rPre = mk('Co-Authored-By: ', GRAPH); rSuf = mk('', GRAPH);
+  rSuf.chars = [...'<noreply@anthropic.com>'].map((ch) => { const s = document.createElement('span'); s.textContent = ch; rSuf.appendChild(s); return s; });
+  REEL = [...MODELS].reverse().map((m) => ({ m, el: mk(m) }));   // ends on the table's first row: the default, Claude Opus 5.5
+}
+const RT0 = 34.2, RT1 = 36.0;
+function reelU(t) { return (REEL.length - 1) * (1 - Math.pow(1 - seg(t, RT0, RT1), 2.6)); }
+function reelCaret(t) {
+  const u = reelU(t), k = Math.min(REEL.length - 1, Math.round(u));
+  const len = [...REEL[k].m].length, xName = RL.x0 + 16 * RADV;
+  if (t < 36.25) return { x: xName + len * RADV + RADV * 0.75, y: RL.base - RL.size * 0.36, w: 30 };
+  const endX = xName + (len + 1 + 23) * RADV + RADV * 0.75, v = seg(t, 36.25, 36.8);
+  return { x: lerp(xName + len * RADV + RADV * 0.75, endX, v), y: RL.base - RL.size * 0.36, w: 30 };
+}
+function drawReel(t) {
+  const on = t >= 33.9 && t < 38.1; show($('sReel'), on); if (!on) return;
+  const inn = appleOut(seg(t, 33.9, 34.35)), out = appleInOut(seg(t, 37.55, 37.95));
+  const u = reelU(t);
+  const y0 = (b) => Math.round(b - RL.size * 0.82);
+  rPre.style.transform = `translate(${RL.x0}px,${y0(RL.base) + Math.round((1 - inn) * 30)}px)`; op(rPre, inn * (1 - out));
+  REEL.forEach((r, i) => {
+    const d = i - u, ad = Math.abs(d), vis = ad < 4.5 && t < 37.95;
+    show(r.el, vis); if (!vis) return;
+    const y = RL.base + d * RL.gap;
+    r.el.style.transform = `translate(${RL.x0 + 16 * RADV}px,${r2(y0(y))}px)`;
+    const settle = seg(t, 36.0, 36.4);
+    const o = ad < 0.5 ? 1 : (1 - Math.min(1, ad / 4.2)) * 0.55 * (1 - settle);
+    r.el.style.color = ad < 0.5 ? PAPER : GRAPH;
+    op(r.el, o * inn * (1 - out));
+  });
+  const k = REEL.length - 1, len = [...REEL[k].m].length;
+  const sx0 = RL.x0 + (16 + len + 1) * RADV, cx = reelCaret(Math.min(t, 37.55)).x;
+  rSuf.style.transform = `translate(${sx0}px,${y0(RL.base)}px)`; op(rSuf, t >= 36.25 ? 1 - out : 0);
+  rSuf.chars.forEach((s, i) => { s.style.opacity = sx0 + (i + 0.5) * RADV < cx - RADV * 0.4 ? 1 : 0; });   // the caret types the address
+  if (t >= 34.05 && t < 37.55) { const c = reelCaret(t); carry(c.x, c.y, c.w); }
+  else if (t >= 37.55 && t < 38.0) { const c = reelCaret(37.55), p = termCaretScreen(38.0), v = whip(seg(t, 37.55, 38.0)); carry(lerp(c.x, p.x, v), lerp(c.y, p.y, v), lerp(c.w, p.w, v)); }
+}
+
+// ───────────────────────── 0% · 0% · 100% (the README's own numbers) 42–46 ─────────────────────────
+const ST = { xr: 820, xl: 876, base: [392, 572, 752], t: [42.1, 42.85, 43.6] };
+let STATS = [];
+function buildStats() {
+  const root = $('sStat');
+  [['0%', COPY.st1], ['0%', COPY.st2], ['100%', COPY.st3]].forEach(([n, l], i) => {
+    const m = document.createElement('div'); m.className = 'abs'; m.style.overflow = 'hidden'; m.style.width = '1920px'; m.style.height = '170px'; m.style.top = (ST.base[i] - 140) + 'px'; root.appendChild(m);
+    const a = document.createElement('div'); a.className = 'stN'; a.textContent = n; m.appendChild(a);
+    const b = document.createElement('div'); b.className = 'stL'; b.textContent = l; m.appendChild(b);
+    STATS.push({ m, a, b, n });
+  });
+}
+function statDot(t) {
+  let i = 0; for (let k = 0; k < 3; k++) if (t >= ST.t[k] - 0.3) i = k;
+  const prev = Math.max(0, i - 1), v = i === 0 ? 1 : whip(seg(t, ST.t[i] - 0.3, ST.t[i] + 0.05));
+  const x = ST.xr - STATS[2].w - 70, y = (k) => ST.base[k] - 132 * 0.36;
+  return { x, y: lerp(y(prev), y(i), v), w: 54 };
+}
+function drawStats(t) {
+  const on = t >= 41.9 && t < 46.05; show($('sStat'), on); if (!on) return;
+  const out = appleInOut(seg(t, 45.35, 45.75));
+  STATS.forEach((s, i) => {
+    const a = sp(0.5, 0)(t - ST.t[i]), b = sp(0.5, 0)(t - ST.t[i] - 0.07);
+    let txt = s.n; if (i === 2) txt = Math.round(100 * appleOut(seg(t, 43.75, 44.45))) + '%';
+    if (s.a.textContent !== txt) s.a.textContent = txt;
+    const wNow = s.a.getBoundingClientRect().width;
+    s.a.style.transform = `translate(${Math.round(ST.xr - wNow)}px,${Math.round(140 - 132 * 0.86 + (1 - a) * 150 - out * 30)}px)`;
+    s.b.style.transform = `translate(${ST.xl}px,${Math.round(140 - 54 * 0.86 - 6 + (1 - b) * 150 - out * 30)}px)`;
+    op(s.a, (t >= ST.t[i] ? 1 : 0) * (1 - out)); op(s.b, (t >= ST.t[i] ? 1 : 0) * (1 - out));
+    s.a.style.color = PAPER;
+  });
+  if (t < 42.05) return;
+  if (t < 45.4) { const d = statDot(t); carry(d.x, d.y, d.w); }
+  else { const d = statDot(45.4), p = penAt(fin, 0), v = whip(seg(t, 45.4, 46.0)); carry(lerp(d.x, p.x, v), lerp(d.y, p.y, v), lerp(d.w, p.w, v)); }
+}
+
+// ───────────────────────── finale 46–50 ─────────────────────────
+function drawFin(t) {
+  const on = t >= 46.0 && t < 50.0; if (!on) { show(fin.el, false); return; }
+  show($('sT'), true);
+  const o = 1 - seg(t, 48.85, 49.2);
+  const n = drawLine(fin, t, 0, o);
+  if (t < 46.0) return;
+  const p = penAt(fin, n);
+  if (t < 48.85) { carry(p.x, p.y, p.w); return; }
+  const k = seg(t, 48.85, 49.85); const f = fieldZoom(1 - k * k * k, p); carry(f.x, f.y, f.w, 1, ROT(t) * (1 - k));
+}
+
+// ───────────────────────── 3D frames + lockup ─────────────────────────
+const LK = { box: 560, x0: 300, y0: 262 };
+function buildLock() {
+  LK.ppu = LK.box / STAR.w; LK.sx = LK.x0 + STAR_C[0] * LK.ppu; LK.sy = LK.y0 + STAR_C[1] * LK.ppu;
+  const lg = $('logo'); lg.style.width = LK.box + 'px'; lg.style.height = LK.box + 'px';
+  $('lockStar').setAttribute('d', STAR.d); $('lockStar').setAttribute('transform', `translate(${LK.x0} ${LK.y0}) scale(${LK.ppu.toFixed(6)})`);
+  const root = $('lockTxt');
+  const mk = (txt, css, cls) => { const d = document.createElement('div'); d.textContent = txt; if (cls) d.className = cls; Object.assign(d.style, { position: 'absolute', left: '0', top: '0', whiteSpace: 'pre', lineHeight: '1' }, css); root.appendChild(d); return d; };
+  LK.word = mk('Claude Mimic', { fontSize: '124px', fontVariationSettings: "'wght' 640", letterSpacing: '-2px', color: PAPER });
+  LK.cmd = mk('npx skills add Juwan-Hwang/claude-mimic', { fontSize: '30px', color: '#D9D7CE' }, 'mono');
+  LK.url = mk('github.com/Juwan-Hwang/claude-mimic', { fontSize: '26px', fontVariationSettings: "'wght' 450", color: '#A3A199', letterSpacing: '0.3px' });
+  LK.disc = mk(COPY.disc, { fontSize: '21px', fontVariationSettings: "'wght' 450", color: GRAPH, letterSpacing: LANG === 'zh' ? '2px' : '0.3px' });
+  LK.place = [[LK.word, 952, 520, 124], [LK.cmd, 958, 612, 30], [LK.url, 958, 664, 26], [LK.disc, 958, 718, 21]];
+}
+window.__handoff = () => ({ ppu: LK.ppu, sx: LK.sx, sy: LK.sy });
+function draw3D(t) {
+  const img = $('f3d');
+  if (t < 6.0) { show(img, true); setSrc(img, `frames/open/${String(Math.min(179, Math.floor(t * FPS + 1e-6))).padStart(4, '0')}.jpg`); op(img, 1); return; }
+  if (t >= 50.0 && t < 52.5 + 1e-6) { show(img, true); setSrc(img, `frames/end/${String(Math.min(74, Math.floor((t - 50) * FPS + 1e-6))).padStart(4, '0')}.jpg`); op(img, 1); return; }
+  show(img, false);
+}
+function drawLock(t) {
+  const on = t >= 52.25; show($('sLock'), on); show($('lockStar'), on && t < 53.75); if (!on) return;
+  op($('lockStar'), seg(t, 52.25, 52.5) * (1 - seg(t, 53.45, 53.75)));
+  // the mascot comes out from behind the asterisk she is holding (the logo's own art), then the art's asterisk takes over
+  const a = sp(0.6, 0.12)(t - 52.65), lg = $('logo');
+  const s = lerp(0.9, 1, a), ox = LK.sx - (LK.sx - LK.x0) * s, oy = LK.sy - (LK.sy - LK.y0) * s + (1 - a) * 18;
+  lg.style.transform = `translate(${r2(ox)}px,${r2(oy)}px) scale(${s.toFixed(4)})`; op(lg, seg(t, 52.65, 52.95));
+  LK.place.forEach(([el, x, base, size], i) => {
+    const k = appleOut(seg(t, 53.7 + i * 0.18, 54.4 + i * 0.18));
+    el.style.transform = `translate(${x}px,${Math.round(base - size * 0.86 + 16 * (1 - k))}px)`; op(el, k);
+  });
+}
+
+// ───────────────────────── seek ─────────────────────────
+window.__meta = { dur: DUR, fps: FPS, bpm: BPM };
+function drawAll(t) { CAR = null; drawThesis(t); drawTerm(t); drawReel(t); drawStats(t); drawFin(t); }
+window.__seek = async (t) => {
+  draw3D(t); drawAll(t); drawLock(t);
+  const scrim = drawCaps(t);
+  op($('scrim'), scrim * (termOn(t) ? 1 : 0));
+  drawCarry(t);
+  op($('fade'), seg(t, DUR - 0.7, DUR - 0.05));
+  if (Q.has('hud')) $('hud').textContent = t.toFixed(3);
+  const p = pending.splice(0); await Promise.all(p); return true;
+};
+// screen-space travel across [t0, t1] (the renderer's motion-blur budget): the carry, the terminal camera + scroll, the reel
+function probePts(t) {
+  const pts = [];
+  if (CAR) pts.push([CAR.x, CAR.y], [CAR.x + Math.min(CAR.w, 4000) / 2, CAR.y]);
+  if (termOn(t)) { const c = camAt(TC, t), tp = topAt(t); pts.push(toS(c, [300, 200]), toS(c, [1600, 820]), toS(c, [400, 500 - tp * LH])); }
+  if (t >= 34 && t < 38) pts.push([0, reelU(t) * RL.gap]);
+  return pts;
+}
+window.__motion = (t0, t1) => {
+  const S = [];
+  for (let k = 0; k <= 4; k++) { const t = lerp(t0, t1, k / 4); drawAll(t); S.push(probePts(t)); }
+  let m = 0;
+  for (let k = 1; k < S.length; k++) { const a = S[k - 1], b = S[k]; for (let i = 0; i < Math.min(a.length, b.length); i++) m = Math.max(m, Math.hypot(b[i][0] - a[i][0], b[i][1] - a[i][1])); }
+  return Math.min(4000, m * 4);
+};
+
+// ───────────────────────── events (the score and the SFX are placed from these, never by hand) ─────────────────────────
+window.__events = () => {
+  const E = [];
+  const hit = (t, extra = {}) => E.push({ t, kind: 'hit', ...extra });
+  [2.0, 6.0, 10.0, 12.0, 16.0, 20.0, 26.0, 30.0, 34.0, 36.0, 38.0, 42.0, 46.0].forEach((t) => hit(t));
+  hit(50.0, { big: true });
+  E.push({ t: 52.5, kind: 'land' }, { t: 52.65, kind: 'pop' }, { t: 53.7, kind: 'rise' });
+  [[11.45, 'carry'], [33.75, 'carry'], [37.55, 'carry'], [41.75, 'carry'], [45.4, 'carry'], [48.85, 'swell']].forEach(([t, k]) => E.push({ t, kind: k }));
+  E.push({ t: 6.0, kind: 'close' }, { t: 12.0, kind: 'open' }, { t: 37.95, kind: 'open' }, { t: 33.5, kind: 'shut' }, { t: 41.5, kind: 'shut' });
+  [13.55, 18.75, 26.9, 31.7, 38.95].forEach((t) => E.push({ t, kind: 'push' }));
+  for (const s of SCROLL) if (s.big) E.push({ t: s.t, kind: 'scroll' });
+  E.push(...keyEvents);
+  for (const c of CMDS) {
+    for (const R of c.rows) for (let i = 0; i < R.n; i += 2) if (R.chars[i].textContent !== ' ') E.push({ t: R.t0 + (i + 0.5) * R.dur / R.n, kind: 'tkey' });
+    E.push({ t: c.end + 0.06, kind: 'enter' });
+  }
+  let lastOut = -1; for (const R of ROWS) if (R.kind === 'out' && R.text.trim() && R.show - lastOut > 0.11) { E.push({ t: R.show, kind: 'out' }); lastOut = R.show; }
+  for (const w of WASH) E.push({ t: w[3], kind: 'mark' });
+  let prevK = 0; for (let f = Math.round(RT0 * 120); f <= Math.round(RT1 * 120); f++) { const t = f / 120, k = Math.round(reelU(t)); if (k !== prevK) { E.push({ t, kind: 'tick', k }); prevK = k; } }
+  ST.t.forEach((t, i) => E.push({ t, kind: 'tap', k: i }));
+  for (let p = 10; p <= 100; p += 10) { const tt = 43.75 + 0.7 * solveOut(p / 100); E.push({ t: tt, kind: 'blip', k: p / 10 }); }
+  return E.sort((a, b) => a.t - b.t);
+};
+function solveOut(v) { let lo = 0, hi = 1; for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; if (appleOut(m) < v) lo = m; else hi = m; } return hi; }
+
+// ───────────────────────── build + ready ─────────────────────────
+caption('before', 14.0, 15.55, COPY.beforeH, COPY.beforeS);
+caption('inst', 17.4, 19.6, COPY.instH, COPY.instS);
+caption('read', 20.5, 23.6, COPY.readH, COPY.readS);
+caption('after', 27.3, 29.45, COPY.afterH, COPY.afterS);
+caption('pr', 31.85, 33.5, COPY.prH, COPY.prS);
+caption('reel', 36.15, 37.5, COPY.reelH, COPY.reelS);
+caption('safe', 38.7, 41.5, COPY.safeH, COPY.safeS);
+window.__ready = (async () => {
+  [STAR, TERM, MODELS] = await Promise.all(['data/star.json', 'data/term.json', 'data/models.json'].map((u) => fetch(u).then((r) => r.json())));
+  SW = STAR.bbox[2] - STAR.bbox[0]; STAR_C = [STAR.cx, STAR.cy];
+  $('carryP').setAttribute('d', STAR.d);
+  for (const w of [450, 500, 600, 620, 640]) await document.fonts.load(`${w} 40px "PFSF"`);
+  await document.fonts.load('400 22px "JBM"', '█║');
+  { const c = document.createElement('canvas').getContext('2d'); c.font = '400 22px JBM'; const m = c.measureText('█'); BLOCK_K = LH / (m.actualBoundingBoxAscent + m.actualBoundingBoxDescent); }
+  buildType(); buildTerm(); buildReel(); buildStats(); buildLock(); buildCaps();
+  await document.fonts.load('500 40px "PFSF"', '让别人以为你一直在用没人会知道智商加成');
+  await document.fonts.load('400 22px "JBM"'); await document.fonts.load('700 22px "JBM"');
+  await document.fonts.ready;
+  { const m = document.createElement('div'); m.className = 'tr mono'; m.textContent = 'M'.repeat(200); $('trows').appendChild(m); show($('sTerm'), true); ADV = m.getBoundingClientRect().width / 200; m.remove(); show($('sTerm'), false); }
+  { const m = document.createElement('div'); m.className = 'rl mono'; m.textContent = 'M'.repeat(100); $('sReel').appendChild(m); show($('sReel'), true); RADV = m.getBoundingClientRect().width / 100; m.remove(); show($('sReel'), false); }
+  layoutType();
+  show($('sStat'), true); STATS.forEach((s) => { s.w = s.a.getBoundingClientRect().width; }); STATS[2].w100 = STATS[2].w; show($('sStat'), false);
+  buildTermCam();
+  await window.__seek(+(Q.get('t') || 0));
+  return true;
+})();
+</script>
+</body></html>
