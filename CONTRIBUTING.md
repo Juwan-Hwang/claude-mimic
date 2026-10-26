@@ -9,12 +9,12 @@ Claude Mimic is an open-source compatibility layer that enables any AI coding ag
 ## Engineering Philosophy: 1:1 Ground Truth
 
 Every rule in this repository is verified against executable primary sources:
-1. **Claude Code production binaries** (e.g. `@anthropic-ai/claude-code@2.1.270`).
+1. **Claude Code production releases** (e.g. the model catalog shipped in `@anthropic-ai/claude-code@2.1.310`).
 2. **Official system prompt instructions** (`/commit` and `/commit-push-pr`).
 3. **Empirical sampling** across live GitHub commits and pull request bodies.
 
 We do **NOT** accept speculative or unverified additions. Specifically:
-- **Do not invent model names**: New models must be confirmed in production binaries or verified live repository commits (e.g. `Claude Haiku 5` does not exist; `Claude Mythos 5.1` is confirmed in v2.1.270 restricted tier).
+- **Do not invent model names**: New models must be confirmed in production binaries or verified live repository commits (e.g. `Claude Haiku 5` does not exist; `Claude Mythos 5.1` is confirmed as a restricted tier; `Claude Haiku 5.5` was added in v2.1.293).
 - **Preserve default bias**: Claude Code's wild output is plain and minimal. Do not force exotic features into default paths.
 
 ---
@@ -54,3 +54,7 @@ When a new Anthropic model is launched:
 - Keep PR titles under 70 characters.
 - PR descriptions should follow the standard skeleton: `## Summary` + `## Test plan`.
 - Ensure all tests pass before opening a pull request.
+
+## Keeping mirrors in sync
+
+`SKILL.md` and `references/` live at the repository root. After editing them, run `npm run sync` so `skills/claude-mimic/` and `.cursor/skills/claude-mimic/` match; CI fails if they drift (`npm run sync:check`).
