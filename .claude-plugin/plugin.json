@@ -1,6 +1,6 @@
 {
   "name": "claude-mimic",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "The AI coding agent attribution compatibility layer. Make any coding agent speak Claude Code's Git dialect.",
   "author": {
     "name": "Juwan Hwang",

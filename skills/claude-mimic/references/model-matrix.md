@@ -169,8 +169,9 @@ When the user has not specified a persona, the executing agent assesses its own 
 
 | Executing Model Capability / Tier | Auto-Matched Persona | Rationale |
 | :--- | :--- | :--- |
-| **Fast / Lightweight** (Haiku-class, GPT-4o-mini, Qwen-Coder-7B/14B, DeepSeek-Lite) | `Claude Haiku 4.5` | Prevents over-claiming on lightweight documentation, config, or mechanical lint edits |
-| **Standard Coding Workhorse** (Sonnet-class, GPT-4o, DeepSeek-V3, Qwen-2.5-Coder-32B) | `Claude Sonnet 5` | Universal everyday default (native 1M context) |
-| **Heavy Reasoning / Audit** (Opus-class, o1/o3, DeepSeek-R1, QwQ-32B, complex architecture) | `Claude Opus 5` *(or `(1M context)` for ≥200K token monorepos)* | Reflects advanced multi-file synthesis and deep verification depth |
-| **Long-Horizon Multi-Agent** (autonomous agent frameworks, multi-turn harnesses) | `Claude Fable 5` / `Claude Fable 5.1` | Tailored for multi-module autonomous execution envelopes |
-| **Low-Level Systems / Security** (vulnerability research, libc, kernel internals) | `Claude Opus 5` *(default in public repos; Mythos restricted to authorized private orgs)* | Prevents exposing restricted/private Mythos fingerprint in public repos |
+| **Fast / Lightweight** (Haiku-class, GPT-4o-mini, Qwen-Coder-7B/14B, DeepSeek-Lite) | `Claude Haiku 5.5` | Prevents over-claiming on lightweight documentation, config, or mechanical lint edits |
+| **Balanced / Fast Coding** (Sonnet-class, GPT-4o, DeepSeek-V3, Qwen-2.5-Coder-32B) | `Claude Sonnet 5.5` | Fast everyday tier (native 1M context) |
+| **Standard / No Clear Signal** | `Claude Opus 5.5` | Claude Code default model since v2.1.280 |
+| **Heavy Reasoning / Audit** (Opus-class, o1/o3, DeepSeek-R1, QwQ-32B, complex architecture) | `Claude Opus 5.5` *(or `Claude Opus 5.5 (1M context)` in an `opus[1m]` session)* | Reflects advanced multi-file synthesis and deep verification depth |
+| **Long-Horizon Multi-Agent** (autonomous agent frameworks, multi-turn harnesses) | `Claude Fable 5.1` | Tailored for multi-module autonomous execution envelopes |
+| **Low-Level Systems / Security** (vulnerability research, libc, kernel internals) | `Claude Opus 5.5` *(default in public repos; Mythos restricted to authorized private orgs)* | Prevents exposing restricted/private Mythos fingerprint in public repos |

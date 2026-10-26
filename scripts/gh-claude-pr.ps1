@@ -185,7 +185,7 @@ $modelSlugMap = @{
 $modelSlug = $modelSlugMap[$Model]
 if (-not $modelSlug) { $modelSlug = "claude-code" }
 
-# Map Surface Name strictly to v2.1.270 iRr() switch cases
+# Map Surface Name strictly to the Claude Code surface switch (iRr() in v2.1.270, Rpi() in v2.1.310; cases unchanged)
 function Get-SurfaceDisplay([string]$s) {
     switch ($s) {
         "cowork"            { "Cowork" }

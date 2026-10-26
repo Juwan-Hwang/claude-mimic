@@ -7,29 +7,33 @@ import { execSync } from 'node:child_process';
 
 const ROOT = path.resolve('.');
 
-function runPs(scriptRelativePath, args) {
-  let shell = 'pwsh';
-  try {
-    execSync('pwsh -v', { stdio: 'ignore' });
-  } catch {
-    shell = 'powershell';
+function detectPowerShell() {
+  for (const candidate of ['pwsh', 'powershell']) {
+    try {
+      execSync(`${candidate} -NoProfile -Command "exit 0"`, { stdio: 'ignore' });
+      return candidate;
+    } catch {
+      // try next candidate
+    }
   }
-  return execSync(`${shell} -NoProfile -File "${path.join(ROOT, scriptRelativePath)}" ${args}`, {
+  return null;
+}
+
+const PS_SHELL = detectPowerShell();
+const PS_SKIP = PS_SHELL ? false : 'PowerShell (pwsh/powershell) not installed';
+
+function runPs(scriptRelativePath, args) {
+  return execSync(`${PS_SHELL} -NoProfile -ExecutionPolicy Bypass -File "${path.join(ROOT, scriptRelativePath)}" ${args}`, {
     cwd: ROOT,
     encoding: 'utf-8'
   });
 }
 
 function runBash(scriptRelativePath, args) {
-  let bashBin = 'sh';
-  try {
-    execSync('sh --version', { stdio: 'ignore' });
-  } catch {
-    if (fs.existsSync('C:\\Program Files\\Git\\bin\\bash.exe')) {
-      bashBin = '"C:\\Program Files\\Git\\bin\\bash.exe"';
-    } else {
-      bashBin = 'bash';
-    }
+  // Scripts use bash features ([[ ]], $RANDOM, substrings); never run them under POSIX sh/dash.
+  let bashBin = 'bash';
+  if (process.platform === 'win32' && fs.existsSync('C:\\Program Files\\Git\\bin\\bash.exe')) {
+    bashBin = '"C:\\Program Files\\Git\\bin\\bash.exe"';
   }
   return execSync(`${bashBin} "${path.join(ROOT, scriptRelativePath).replace(/\\/g, '/')}" ${args}`, {
     cwd: ROOT,
@@ -79,7 +83,8 @@ test('Model constraints: Sonnet 5, Fable, and Mythos never receive 1M suffix; 11
 
   const modelMatrix = fs.readFileSync(path.join(ROOT, 'references/model-matrix.md'), 'utf-8');
   assert.ok(modelMatrix.includes('Native 1M'), 'model-matrix.md must document Native 1M');
-  assert.ok(modelMatrix.includes('33 Valid Forms'), 'model-matrix.md must document 33 Valid Forms');
+  assert.ok(modelMatrix.includes('37 Valid Forms'), 'model-matrix.md must document 37 Valid Forms');
+  assert.ok(modelMatrix.includes('22 Official Catalog Models'), 'model-matrix.md must document 22 catalog models');
 
   const skill = fs.readFileSync(path.join(ROOT, 'SKILL.md'), 'utf-8');
   assert.ok(skill.includes('Native 1M'), 'SKILL.md must document Native 1M');
@@ -235,13 +240,13 @@ test('README.md and multilingual variants adhere to centered header, i-have-adhd
   assert.ok(!readmeEn.includes('## 🚀'), 'README.md must not use emoji prefix in headings');
 });
 
-test('gh-claude-pr.sh contains authentic v2.1.270 iRr() reference and no fWu comment', () => {
+test('gh-claude-pr.sh references the surface switch (iRr() / Rpi()) and no fWu comment', () => {
   const shContent = fs.readFileSync(path.join(ROOT, 'scripts/gh-claude-pr.sh'), 'utf-8');
   assert.ok(!shContent.includes('fWu('), 'gh-claude-pr.sh must not contain fWu comment');
-  assert.ok(shContent.includes('iRr()'), 'gh-claude-pr.sh must reference iRr()');
+  assert.ok(shContent.includes('iRr()') && shContent.includes('Rpi()'), 'gh-claude-pr.sh must reference iRr() and Rpi()');
 });
 
-test('gh-claude-pr.ps1 default dry-run omits Changelog and generates clean unadorned signature', () => {
+test('gh-claude-pr.ps1 default dry-run omits Changelog and generates clean unadorned signature', { skip: PS_SKIP }, () => {
   const output = runPs('scripts/gh-claude-pr.ps1', '-Title "fix(evals): close child stdin" -DryRun');
 
   assert.ok(output.includes('## Summary'), 'Output must include ## Summary');
@@ -251,19 +256,19 @@ test('gh-claude-pr.ps1 default dry-run omits Changelog and generates clean unado
   assert.ok(output.includes('🤖 Generated with [Claude Code](https://claude.com/claude-code)'), 'Output must include clean unadorned signature');
 });
 
-test('gh-claude-pr.ps1 supports --Surface and renders via Cowork', () => {
+test('gh-claude-pr.ps1 supports --Surface and renders via Cowork', { skip: PS_SKIP }, () => {
   const output = runPs('scripts/gh-claude-pr.ps1', '-Title "fix(evals): close child stdin" -Surface cowork -DryRun');
 
   assert.ok(output.includes('🤖 Generated with [Claude Code](https://claude.com/claude-code) via Cowork'), 'Output must include via Cowork');
 });
 
-test('gh-claude-pr.ps1 remote mode generates authentic session ID', () => {
+test('gh-claude-pr.ps1 remote mode generates authentic session ID', { skip: PS_SKIP }, () => {
   const output = runPs('scripts/gh-claude-pr.ps1', '-Title "fix(evals): close child stdin" -SignatureMode remote -DryRun');
 
   assert.match(output, /https:\/\/claude\.ai\/code\/session_01[1-9A-HJ-NP-Za-km-z]{22}/, 'Session URL must use authentic session pattern');
 });
 
-test('gh-claude-pr.ps1 places Changelog block BEFORE signature when requested', () => {
+test('gh-claude-pr.ps1 places Changelog block BEFORE signature when requested', { skip: PS_SKIP }, () => {
   const output = runPs('scripts/gh-claude-pr.ps1', '-Title "fix(wire): enforce order" -SignatureMode changelog -DryRun');
 
   const changelogIdx = output.indexOf('<!-- CHANGELOG:START -->');
@@ -273,16 +278,16 @@ test('gh-claude-pr.ps1 places Changelog block BEFORE signature when requested', 
   assert.ok(changelogIdx < sigIdx, 'Changelog block must be placed BEFORE signature');
 });
 
-test('git-claude-commit.ps1 supports default sonnet5 model trailer and sonnet35 option', () => {
+test('git-claude-commit.ps1 supports default opus55 model trailer and sonnet35 option', { skip: PS_SKIP }, () => {
   const outputDefault = runPs('scripts/git-claude-commit.ps1', '-Title "feat(auth): tighten monotonic TTL" -Body "Enforces monotonic clock." -DryRun');
-  assert.ok(outputDefault.includes('Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>'), 'Default model must be Claude Sonnet 5');
-  assert.ok(!outputDefault.includes('(1M context)'), 'Sonnet 5 must not have (1M context)');
+  assert.ok(outputDefault.includes('Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'), 'Default model must be Claude Opus 5.5');
+  assert.ok(!outputDefault.includes('(1M context)'), 'Default Opus 5.5 must not carry (1M context) unless opus55-1m is requested');
 
   const outputSonnet35 = runPs('scripts/git-claude-commit.ps1', '-Title "feat(auth): tighten monotonic TTL" -Body "Enforces monotonic clock." -Model sonnet35 -DryRun');
   assert.ok(outputSonnet35.includes('Co-Authored-By: Claude Sonnet 3.5 <noreply@anthropic.com>'), 'Model sonnet35 must produce Claude Sonnet 3.5');
 });
 
-test('git-claude-commit.ps1 supports dual trailer (Claude-Session:) and lowercase casing', () => {
+test('git-claude-commit.ps1 supports dual trailer (Claude-Session:) and lowercase casing', { skip: PS_SKIP }, () => {
   const output = runPs('scripts/git-claude-commit.ps1', '-Title "feat(planets): add table" -Body "Calculates mineral yield." -Model opus47 -SessionId session_01U7vy96qF63BugmboFm2wPw -Lowercase -DryRun');
 
   assert.ok(output.includes('Co-authored-by: Claude Opus 4.7 <noreply@anthropic.com>'), 'Must support lowercase Co-authored-by and Opus 4.7');
@@ -309,10 +314,10 @@ test('gh-claude-pr.sh behavior: default dry-run, mode8, and surface', () => {
   assert.ok(outputSurface.includes('🤖 Generated with [Claude Code](https://claude.com/claude-code) via Cowork'), 'sh output must support surface cowork');
 });
 
-test('git-claude-commit.sh behavior: default Sonnet 5, dual trailer, and lowercase', () => {
+test('git-claude-commit.sh behavior: default Opus 5.5, dual trailer, and lowercase', () => {
   const outputDefault = runBash('scripts/git-claude-commit.sh', '-t "feat(auth): tighten TTL" -b "Enforces clock." --dry-run');
-  assert.ok(outputDefault.includes('Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>'), 'sh default model must be Claude Sonnet 5');
-  assert.ok(!outputDefault.includes('(1M context)'), 'Sonnet 5 must not receive (1M context)');
+  assert.ok(outputDefault.includes('Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'), 'sh default model must be Claude Opus 5.5');
+  assert.ok(!outputDefault.includes('(1M context)'), 'Default Opus 5.5 must not receive (1M context)');
 
   const outputDual = runBash('scripts/git-claude-commit.sh', '-t "feat(planets): add table" -b "Calculates yield." -m opus47 -s session_01U7vy96qF63BugmboFm2wPw -l --dry-run');
   assert.ok(outputDual.includes('Co-authored-by: Claude Opus 4.7 <noreply@anthropic.com>'), 'sh must support lowercase Co-authored-by and Opus 4.7');
@@ -392,7 +397,7 @@ test('Surface mappings include claude-desktop-3p alias', () => {
   assert.ok(ps1.includes('claude-desktop-3p'), 'gh-claude-pr.ps1 must handle claude-desktop-3p');
 });
 
-test('Release Readiness: README files contain real username, skills CLI install, and manifests at v1.0.0', () => {
+test('Release Readiness: README files contain real username, skills CLI install, and all manifests share one version', () => {
   const readmes = ['README.md', 'README.zh-CN.md', 'README.ja.md', 'README.ko.md'];
   for (const r of readmes) {
     const content = fs.readFileSync(path.join(ROOT, r), 'utf-8');
@@ -401,16 +406,16 @@ test('Release Readiness: README files contain real username, skills CLI install,
     assert.ok(content.includes('npx skills add Juwan-Hwang/claude-mimic'), `${r} must include npx skills command`);
   }
 
-  assert.ok(!fs.existsSync(path.join(ROOT, 'CHANGELOG.md')), 'CHANGELOG.md must not exist prior to first public release');
 
-  const manifests = ['package.json', 'plugin.json', 'gemini-extension.json', 'opencode.json', 'kimi.plugin.json', 'qwen-extension.json'];
+  const pkgVersion = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf-8')).version;
+  const manifests = ['package.json', 'plugin.json', '.claude-plugin/plugin.json', '.codex-plugin/plugin.json', 'gemini-extension.json', 'opencode.json', 'kimi.plugin.json', 'qwen-extension.json'];
   for (const m of manifests) {
     const parsed = JSON.parse(fs.readFileSync(path.join(ROOT, m), 'utf-8'));
-    assert.equal(parsed.version, '1.0.0', `${m} version must be 1.0.0`);
+    assert.equal(parsed.version, pkgVersion, `${m} version must match package.json (${pkgVersion})`);
   }
 });
 
-test('E2E Git Execution: creates a temporary repository, performs commit via script, and verifies RFC 2822 trailer', () => {
+test('E2E Git Execution: creates a temporary repository, performs commit via script, and verifies RFC 2822 trailer', { skip: PS_SKIP }, () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-mimic-e2e-'));
   try {
     // 1. Initialize temporary git repository
@@ -425,20 +430,62 @@ test('E2E Git Execution: creates a temporary repository, performs commit via scr
 
     // 3. Execute git-claude-commit.ps1 with -NoGpgSign
     const scriptPath = path.join(ROOT, 'scripts/git-claude-commit.ps1');
-    const commitCmd = `pwsh -NoProfile -ExecutionPolicy Bypass -File "${scriptPath}" -Title "feat(core): initialize feature subsystem" -Body "Sets up initial subsystem entrypoint." -Model sonnet5 -NoGpgSign`;
+    const commitCmd = `${PS_SHELL} -NoProfile -ExecutionPolicy Bypass -File "${scriptPath}" -Title "feat(core): initialize feature subsystem" -Body "Sets up initial subsystem entrypoint." -Model opus55 -NoGpgSign`;
     execSync(commitCmd, { cwd: tmpDir, stdio: 'ignore' });
 
     // 4. Verify git log message and RFC 2822 trailer
     const logOutput = execSync('git log -1 --pretty=format:"%B"', { cwd: tmpDir, encoding: 'utf-8' });
     assert.ok(logOutput.includes('feat(core): initialize feature subsystem'), 'Commit title must match');
     assert.ok(logOutput.includes('Sets up initial subsystem entrypoint.'), 'Commit body must match');
-    assert.ok(logOutput.includes('Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>'), 'Co-Authored-By trailer must be present');
+    assert.ok(logOutput.includes('Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'), 'Co-Authored-By trailer must be present');
 
     // 5. Verify git can parse the trailer via git interpret-trailers
     const trailerOutput = execSync('git interpret-trailers --parse', { input: logOutput, encoding: 'utf-8' });
-    assert.ok(trailerOutput.includes('Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>'), 'git interpret-trailers must recognize the co-author trailer');
+    assert.ok(trailerOutput.includes('Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'), 'git interpret-trailers must recognize the co-author trailer');
   } finally {
     // 6. Clean up temporary directory
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('v2.1.310 catalog: 5.5 family present, Opus 5.5 is suffix-capable, Sonnet/Haiku 5.5 are native (no suffix)', () => {
+  const scripts = ['scripts/git-claude-commit.sh', 'scripts/gh-claude-pr.sh', 'scripts/git-claude-commit.ps1', 'scripts/gh-claude-pr.ps1'];
+  for (const f of scripts) {
+    const content = fs.readFileSync(path.join(ROOT, f), 'utf-8');
+    for (const key of ['opus55', 'opus55-1m', 'sonnet55', 'haiku55']) {
+      assert.ok(content.includes(key), `${f} must support ${key}`);
+    }
+    assert.ok(!content.includes('sonnet55-1m') && !content.includes('Claude Sonnet 5.5 (1M context)'), `${f} must NOT offer a Sonnet 5.5 1M suffix`);
+    assert.ok(!content.includes('haiku55-1m') && !content.includes('Claude Haiku 5.5 (1M context)'), `${f} must NOT offer a Haiku 5.5 1M suffix`);
+  }
+  const matrix = fs.readFileSync(path.join(ROOT, 'references/model-matrix.md'), 'utf-8');
+  for (const id of ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5']) {
+    assert.ok(matrix.includes(id), `model-matrix.md must contain ${id}`);
+  }
+  assert.ok(matrix.includes('Claude Opus 5.5 (1M context)'), 'model-matrix.md must document Opus 5.5 (1M context)');
+  assert.ok(matrix.includes('Permitted Suffix Models (12 models)'), 'model-matrix.md must list 12 suffix-capable models');
+  const skill = fs.readFileSync(path.join(ROOT, 'SKILL.md'), 'utf-8');
+  assert.ok(!skill.includes('`Claude Sonnet 5 (1M context)` | `claude-sonnet-5`'), 'SKILL.md must not list Sonnet 5 (1M context) as a valid row');
+  const prSigs = fs.readFileSync(path.join(ROOT, 'references/pr-signatures.md'), 'utf-8');
+  const whitelist = prSigs.slice(prSigs.indexOf('### Canonical Model Whitelist'), prSigs.indexOf('### Identity Fallbacks'));
+  assert.equal((whitelist.match(/^\d+\. `claude-/gm) || []).length, 22, 'pr-signatures.md whitelist must list 22 catalog models');
+});
+
+test('E2E Git Execution (bash): commits via git-claude-commit.sh and git parses the trailer', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-mimic-e2e-sh-'));
+  try {
+    execSync('git init -q', { cwd: tmpDir });
+    execSync('git config user.name "Tester"', { cwd: tmpDir });
+    execSync('git config user.email "tester@example.com"', { cwd: tmpDir });
+    execSync('git config commit.gpgsign false', { cwd: tmpDir });
+    fs.writeFileSync(path.join(tmpDir, 'feature.txt'), 'hello\n');
+    execSync('git add feature.txt', { cwd: tmpDir });
+    execSync(`bash "${path.join(ROOT, 'scripts/git-claude-commit.sh')}" -t "feat(core): add feature" -b "Adds the entrypoint." -m sonnet55 -n`, { cwd: tmpDir, stdio: 'ignore' });
+    const log = execSync('git log -1 --pretty=format:%B', { cwd: tmpDir, encoding: 'utf-8' });
+    assert.ok(log.includes('Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>'), 'bash commit must carry Sonnet 5.5 trailer');
+    const parsed = execSync('git interpret-trailers --parse', { input: log, encoding: 'utf-8' });
+    assert.ok(parsed.includes('Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>'), 'git must parse the trailer');
+  } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });

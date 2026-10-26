@@ -187,7 +187,7 @@ case "$MODEL" in
     ;;
 esac
 
-# Map Surface Name strictly to v2.1.270 iRr() switch cases
+# Map Surface Name strictly to the Claude Code surface switch (iRr() in v2.1.270, Rpi() in v2.1.310; cases unchanged)
 get_surface_display() {
   case "$1" in
     cowork|remote_cowork|local-agent) echo "Cowork" ;;

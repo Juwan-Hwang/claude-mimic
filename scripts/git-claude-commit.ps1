@@ -87,7 +87,7 @@ $modelNameMap = @{
 }
 
 $modelName = $modelNameMap[$Model]
-# Fallback in v2.1.270 for unrecognized/third-party models is "Claude Code"
+# Fallback in v2.1.270–v2.1.310 for unrecognized/third-party models is "Claude Code"
 if (-not $modelName) { $modelName = "Claude Code" }
 
 $prefix = if ($Lowercase) { "Co-authored-by" } else { "Co-Authored-By" }
