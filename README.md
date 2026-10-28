@@ -24,6 +24,8 @@
   <a href="README.ko.md" title="한국어">🇰🇷 한국어</a>
 </p>
 
+https://github.com/user-attachments/assets/42947346-7f67-40a5-8b89-5536b3c63525
+
 ## Table of Contents
 
 [Install](#install) · [Usage](#usage) · [What it does](#what-it-does) · [The Difference](#the-difference) · [Multi-Agent Compatibility](#multi-agent-compatibility) · [Responsible Use & Transparency](#responsible-use--transparency) · [License](#license)
